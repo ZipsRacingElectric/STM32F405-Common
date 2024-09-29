@@ -71,9 +71,6 @@ include $(CHIBIOS)/os/common/ports/ARMv7-M/compilers/GCC/mk/port.mk
 # Auto-build files in ./source recursively.
 include $(CHIBIOS)/tools/mk/autobuild.mk
 
-# Other files (optional).
-include $(CHIBIOS)/os/hal/lib/streams/streams.mk
-
 # Define linker script file here
 LDSCRIPT= $(STARTUPLD)/STM32F405xG.ld
 
