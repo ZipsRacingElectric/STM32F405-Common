@@ -1,14 +1,15 @@
 CLANGD_FILE := $(BUILDDIR)/compile_commands.json
 
 # This generates the Clangd compile_commands.json file.
-$(CLANGD_FILE): $(ALLCSRC) $(ALLINC)
+$(CLANGD_FILE): $(CSRC) $(ALLINC)
 	rm -f $(BUILDDIR)/compile_commands.json;
 	mkdir -p $(BUILDDIR);
 	printf "[\n"													>> $(CLANGD_FILE);
-	for c in $(ALLCSRC); do \
+	for c in $(CSRC); do \
 		printf "\t{\n"												>> $(CLANGD_FILE); \
 		printf "\t\t\"directory\": \"$(CURDIR)/$(BUILDDIR)\",\n"	>> $(CLANGD_FILE); \
 		printf "\t\t\"command\": \"arm-none-eabi-gcc"				>> $(CLANGD_FILE); \
+		printf "%s" "--std=c99"										>> $(CLANGD_FILE); \
 		for i in $(ALLINC); do \
 			printf "%s" " -I$$i"									>> $(CLANGD_FILE); \
 		done; \
