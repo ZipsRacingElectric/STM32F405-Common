@@ -1,6 +1,7 @@
-# Common library compilation
+# TODO(Barach): This shouldn't require absolute path (CURDIR).
+
+# Common library includes
 ALLINC += $(CURDIR)/common/include
-CSRC += common/src/mc24lc32.c
 
 # ChibiOS comilation
 include common/make/chibios.mk
