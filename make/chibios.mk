@@ -3,7 +3,7 @@
 # Build Options ---------------------------------------------------------------------------------------------------------------
 
 # Compiler options here.
-USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+USE_OPT += -ggdb -fomit-frame-pointer -falign-functions=16
 
 # C specific options here (added to USE_OPT).
 USE_COPT = 

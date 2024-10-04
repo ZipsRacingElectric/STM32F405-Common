@@ -1,11 +1,15 @@
+# Common library compilation
+ALLINC += $(CURDIR)/common/include
+CSRC += common/src/mc24lc32.c
+
 # ChibiOS comilation
-include common/chibios.mk
+include common/make/chibios.mk
 
 # Board file generation
-include common/board.mk
+include common/make/board.mk
 
 # Clangd compilation flag generation
-include common/clangd.mk
+include common/make/clangd.mk
 
 # Board programming
-include common/openocd.mk
+include common/make/openocd.mk
