@@ -93,6 +93,22 @@ bool mc24lc32Write (mc24lc32_t* mc24lc32)
 	return result;
 }
 
+bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data, uint8_t dataCount)
+{
+	// Copy the data into cache
+	memcpy (mc24lc32->cache + address, data, dataCount);
+
+	// Acquire the bus
+	i2cAcquireBus (mc24lc32->config->i2c);
+
+	// Write the cached data to the device.
+	bool result = mc24lc32PageWrite(mc24lc32, address, dataCount);
+
+	// Release the bus
+	i2cReleaseBus (mc24lc32->config->i2c);
+	return result;
+}
+
 bool mc24lc32IsValid (mc24lc32_t* mc24lc32)
 {
 	// Check the magic string is correct (including terminator)

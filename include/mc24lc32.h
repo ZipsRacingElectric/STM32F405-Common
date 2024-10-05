@@ -73,6 +73,17 @@ bool mc24lc32Read (mc24lc32_t* mc24lc32);
 bool mc24lc32Write (mc24lc32_t* mc24lc32);
 
 /**
+ * @brief Writes the specified data to the device.
+ * @param mc24lc32 The device to write to.
+ * @param address The address to write to.
+ * @param data The array of data to write.
+ * @param dataCount The size of the data array.
+ * @return True if successful, false otherwise.
+ * @note The write operation cannot cross a page boundary (32 byte).
+ */
+bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data, uint8_t dataCount);
+
+/**
  * @brief Checks whether the cached memory of the device is valid.
  * @param mc24lc32 The device to check.
  * @return True if the cached memory is valid, false otherwise.
