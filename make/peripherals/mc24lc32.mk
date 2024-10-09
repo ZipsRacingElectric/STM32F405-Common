@@ -1,2 +1,2 @@
 # Add the module's source file to the compilation
-CSRC += common/src/mc24lc32.c
+CSRC += common/src/peripherals/mc24lc32.c

@@ -23,6 +23,15 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
+enum mc24lc32State
+{
+	MC24LC32_STATE_READY	= 0,
+	MC24LC32_STATE_FAILED	= 1,
+	MC24LC32_STATE_INVALID	= 2
+};
+
+typedef enum mc24lc32State mc24lc32State_t;
+
 struct mc24lc32Config
 {
 	/// @brief The 7-bit I2C address of the device.
@@ -40,7 +49,17 @@ typedef struct mc24lc32Config mc24lc32Config_t;
 /// @brief Driver for the Microchip 24LC32 I2C EEPROM.
 struct mc24lc32
 {
-	mc24lc32Config_t* config;
+	/// @brief State of the device.
+	mc24lc32State_t state;
+
+	/// @brief The 7-bit I2C address of the device.
+	uint8_t addr;
+
+	/// @brief The IC2 bus of the device.
+	I2CDriver* i2c;
+
+	/// @brief The magic string used to validate the EEPROM's contents.
+	const char* magicString;
 
 	/// @brief Cached copy of the EEPROM's contents. Use for read / write operations.
 	uint8_t cache [MC24LC32_SIZE];
