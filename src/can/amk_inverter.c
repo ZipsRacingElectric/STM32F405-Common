@@ -7,7 +7,7 @@
 #define TORQUE_FACTOR			0.0098f
 #define TORQUE_INVERSE_FACTOR	102.040816326530f
 #define TORQUE_TO_WORD(torque)	(int16_t) ((torque) * TORQUE_INVERSE_FACTOR)
-#define WORD_TO_TORQUE(word)	((word) * TORQUE_FACTOR)
+#define WORD_TO_TORQUE(word)	(((int16_t) (word)) * TORQUE_FACTOR)
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +34,9 @@ int8_t amkReceiveHandler (void* node, CANRxFrame* frame);
 
 void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 {
+	// Store the configuration
+	amk->baseId = config->baseId;
+
 	// Initialize the node
 	canNodeConfig_t canConfig =
 	{

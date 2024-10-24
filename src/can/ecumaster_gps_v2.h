@@ -18,6 +18,16 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
+enum ecumasterGpsStatus
+{
+	ECUMASTER_GPS_STATUS_ERROR	= 0,
+	ECUMASTER_GPS_STATUS_NO_FIX	= 1,
+	ECUMASTER_GPS_STATUS_GPS_2D	= 3,
+	ECUMASTER_GPS_STATUS_GPS_3D	= 4
+};
+
+typedef enum ecumasterGpsStatus ecumasterGpsStatus_t;
+
 struct ecumasterGpsConfig
 {
 	CANDriver*		driver;
@@ -30,7 +40,14 @@ struct ecumasterGps
 {
 	CAN_NODE_FIELDS;
 
+	float latitude;
+	float longitude;
 	float speed;
+	float height;
+	uint8_t satellitesNumber;
+	uint8_t gpsFrameIndex;
+	uint8_t emptyFrameIndex;
+	ecumasterGpsStatus_t gpsStatus;
 	float headingMotion;
 	float headingVehicle;
 	float xAngleRate;
