@@ -63,8 +63,9 @@ bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 bool mc24lc32Init(mc24lc32_t* mc24lc32, mc24lc32Config_t *config)
 {
 	// Store the driver configuration
-	mc24lc32->addr	= config->addr;
-	mc24lc32->i2c	= config->i2c;
+	mc24lc32->addr			= config->addr;
+	mc24lc32->i2c			= config->i2c;
+	mc24lc32->magicString	= config->magicString;
 
 	// Start the device in the ready state
 	mc24lc32->state = MC24LC32_STATE_READY;
@@ -147,4 +148,12 @@ void mc24lc32Validate (mc24lc32_t* mc24lc32)
 	// Copy the magic string into the beginning of memory (including terminator)
 	uint8_t stringSize = strlen (mc24lc32->magicString) + 1;
 	memcpy (mc24lc32->cache, mc24lc32->magicString, stringSize);
+}
+
+void mc34lc32Invalidate (mc24lc32_t* mc24lc32)
+{
+	// Write all 1's over the magic string
+	uint8_t stringSize = strlen (mc24lc32->magicString) + 1;
+	for (uint8_t index = 0; index < stringSize; ++index)
+		mc24lc32->cache [index] = 0xFF;
 }

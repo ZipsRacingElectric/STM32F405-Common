@@ -110,9 +110,15 @@ bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data
 bool mc24lc32IsValid (mc24lc32_t* mc24lc32);
 
 /**
- * @brief Validates the cached memory of the device. Changes will be commited on the next write.
+ * @brief Validates the cached memory of the device. Changes will be committed on the next write.
  * @param mc24lc32 The device to validate.
  */
 void mc24lc32Validate (mc24lc32_t* mc24lc32);
+
+/**
+ * @brief Invalidates the cached memory of the device. Changes will be committed on the next write.
+ * @param mc24lc32 The device to invalidate.
+ */
+void mc34lc32Invalidate (mc24lc32_t* mc24lc32);
 
 #endif // MC24LC32_H
