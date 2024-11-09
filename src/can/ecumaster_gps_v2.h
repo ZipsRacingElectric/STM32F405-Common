@@ -5,7 +5,7 @@
 //
 // Author: Cole Barach
 // Date Created: 2024.10.05
-// 
+//
 // Description: Object representing the ECUMaster GPS CAN module.
 //
 // To do:
@@ -18,25 +18,21 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-enum ecumasterGpsStatus
+typedef enum
 {
 	ECUMASTER_GPS_STATUS_ERROR	= 0,
 	ECUMASTER_GPS_STATUS_NO_FIX	= 1,
 	ECUMASTER_GPS_STATUS_GPS_2D	= 3,
 	ECUMASTER_GPS_STATUS_GPS_3D	= 4
-};
+} ecumasterGpsStatus_t;
 
-typedef enum ecumasterGpsStatus ecumasterGpsStatus_t;
-
-struct ecumasterGpsConfig
+typedef struct
 {
 	CANDriver*		driver;
 	sysinterval_t	timeoutPeriod;
-};
+} ecumasterGpsConfig_t;
 
-typedef struct ecumasterGpsConfig ecumasterGpsConfig_t;
-
-struct ecumasterGps
+typedef struct
 {
 	CAN_NODE_FIELDS;
 
@@ -56,9 +52,7 @@ struct ecumasterGps
 	float xAcceleration;
 	float yAcceleration;
 	float zAcceleration;
-};
-
-typedef struct ecumasterGps ecumasterGps_t;
+} ecumasterGps_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

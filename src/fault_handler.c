@@ -11,7 +11,7 @@
 #define bkpt() __asm volatile ("BKPT #0\n")
 
 // See http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABBGBEC.html
-enum FaultType
+typedef enum
 {
 	Reset = 1,
 	NMI = 2,
@@ -19,9 +19,7 @@ enum FaultType
 	MemManage = 4,
 	BusFault = 5,
 	UsageFault = 6,
-};
-
-typedef enum FaultType FaultType;
+} FaultType;
 
 /// @brief On hard fault, copy FAULT_PSP to the sp reg so gdb can give a trace
 void **FAULT_PSP;

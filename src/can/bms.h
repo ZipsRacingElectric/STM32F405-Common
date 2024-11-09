@@ -20,24 +20,19 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-struct bmsConfig
+typedef struct
 {
 	CANDriver*		driver;
 	sysinterval_t	timeoutPeriod;
-};
+} bmsConfig_t;
 
-typedef struct bmsConfig bmsConfig_t;
-
-struct bms
+typedef struct
 {
 	CAN_NODE_FIELDS;
-	
 	bool tractiveSystemsActive;
 	float cellVoltages [BMS_CELL_COUNT];
 	float temperatures [BMS_TEMPERATURE_COUNT];
-};
-
-typedef struct bms bms_t;
+} bms_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

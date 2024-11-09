@@ -18,22 +18,18 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-struct amkInverterConfig
+typedef struct
 {
 	CANDriver*		driver;
 	sysinterval_t	timeoutPeriod;
 	uint16_t		baseId;
-};
+} amkInverterConfig_t;
 
-typedef struct amkInverterConfig amkInverterConfig_t;
-
-struct amkInverter
+typedef struct
 {
 	CAN_NODE_FIELDS;
 	uint16_t baseId;
-};
-
-typedef struct amkInverter amkInverter_t;
+} amkInverter_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

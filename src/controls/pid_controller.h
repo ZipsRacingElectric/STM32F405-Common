@@ -10,18 +10,16 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-struct pidController
+typedef struct
 {
 	float kp;
 	float ki;
 	float kd;
-	
+
 	float ySetPoint;
 	float iPrime;
 	float dPrime;
-};
-
-typedef struct pidController pidController_t;
+} pidController_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

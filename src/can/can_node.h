@@ -16,14 +16,12 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-enum canNodeState
+typedef enum
 {
 	CAN_NODE_VALID		= 0,
 	CAN_NODE_INCOMPLETE	= 1,
 	CAN_NODE_TIMEOUT	= 2
-};
-
-typedef enum canNodeState canNodeState_t;
+} canNodeState_t;
 
 /**
  * @brief Function for handling received CAN messages. This function should return a unique index for what message was
@@ -33,16 +31,14 @@ typedef int8_t (canReceiveHandler_t) (void* node, CANRxFrame* frame);
 
 typedef void (canEventHandler_t) (void* node);
 
-struct canNodeConfig
+typedef struct
 {
 	CANDriver*				driver;
 	canReceiveHandler_t*	receiveHandler;
 	canEventHandler_t*		timeoutHandler;
 	sysinterval_t			timeoutPeriod;
 	uint8_t					messageCount;
-};
-
-typedef struct canNodeConfig canNodeConfig_t;
+} canNodeConfig_t;
 
 #define CAN_NODE_FIELDS							\
 	canNodeState_t			state;				\
@@ -58,12 +54,10 @@ typedef struct canNodeConfig canNodeConfig_t;
  * @brief Polymorphic base object representing a node in a CAN bus.
  * @note When deriving this struct, use the @c CAN_NODE_FIELDS macro to define the first set of fields.
  */
-struct canNode
+typedef struct
 {
 	CAN_NODE_FIELDS;
-};
-
-typedef struct canNode canNode_t;
+} canNode_t;
 
 // CAN Library Hooks ----------------------------------------------------------------------------------------------------------
 
