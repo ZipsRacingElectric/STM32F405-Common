@@ -21,8 +21,9 @@
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 /**
- * @brief Function to be called when a hard fault, memory fault, or 
+ * @brief Function to be called when an unrecoverable fault occurs. This function is application specific, meaning the user
+ * must define this. Unrecoverable faults include a hard fault, memory fault, bus fault, and unhandled NMIs.
  */
-void faultCallback (void);
+void hardFaultCallback (void);
 
 #endif // FAULT_HANDLER_H

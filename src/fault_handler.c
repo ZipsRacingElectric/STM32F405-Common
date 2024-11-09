@@ -29,7 +29,7 @@ register void *stack_pointer asm ("sp");
 
 void HardFault_Handler (void)
 {
-	faultCallback ();
+	hardFaultCallback ();
 
 #if DEBUG_BACKTRACE
 	
@@ -86,7 +86,7 @@ void BusFault_Handler (void) __attribute__ ((alias ("HardFault_Handler")));
 
 void UsageFault_Handler (void)
 {
-	faultCallback ();
+	hardFaultCallback ();
 
 #if DEBUG_BACKTRACE
 	
@@ -126,7 +126,7 @@ void UsageFault_Handler (void)
 
 void MemManage_Handler (void)
 {
-	faultCallback ();
+	hardFaultCallback ();
 
 #if DEBUG_BACKTRACE
 
@@ -167,7 +167,7 @@ void MemManage_Handler (void)
 
 void NMI_Handler (void)
 {
-	faultCallback ();
+	hardFaultCallback ();
 
 #if DEBUG_BACKTRACE
 

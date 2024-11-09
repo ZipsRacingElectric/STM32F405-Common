@@ -16,7 +16,7 @@ void canNodeInit (canNode_t* node, canNodeConfig_t* config)
 
 	// Reset the message flags
 	node->messageFlags = 0;
-	
+
 	// Calculate the messsage flags that indicate validity.
 	node->validFlags = ((1 << config->messageCount) - 1);
 
@@ -56,7 +56,7 @@ void canNodeCheckTimeout (canNode_t* node, systime_t timeCurrent)
 
 	// Enter the timeout state
 	node->state = CAN_NODE_TIMEOUT;
-	
+
 	// Reset the validity flags
 	node->messageFlags = 0;
 

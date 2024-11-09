@@ -56,8 +56,7 @@ typedef struct canNodeConfig canNodeConfig_t;
 
 /**
  * @brief Polymorphic base object representing a node in a CAN bus.
- * @note When deriving this struct, use the @c CAN_NODE_FIELDS macro to define
- * the first set of fields.
+ * @note When deriving this struct, use the @c CAN_NODE_FIELDS macro to define the first set of fields.
  */
 struct canNode
 {
@@ -65,6 +64,15 @@ struct canNode
 };
 
 typedef struct canNode canNode_t;
+
+// CAN Library Hooks ----------------------------------------------------------------------------------------------------------
+
+/**
+ * @brief Function to be called when a CAN function fails. This function is application specific, meaning the user must define
+ * this. The goal of this function is to simply communicate an error has occured, not to handle the error. The caller of the
+ * function that triggered this error is responsible for appropriately handling the error.
+ */
+void canFaultCallback (msg_t result);
 
 // CAN Node Functions ---------------------------------------------------------------------------------------------------------
 

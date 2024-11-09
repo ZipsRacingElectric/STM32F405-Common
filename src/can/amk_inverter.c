@@ -89,7 +89,10 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 		}
 	};
 
-	return canTransmitTimeout(amk->driver, CAN_ANY_MAILBOX, &transmit, timeout);
+	msg_t result = canTransmitTimeout (amk->driver, CAN_ANY_MAILBOX, &transmit, timeout);
+	if (result != MSG_OK)
+		canFaultCallback (result);
+	return result;
 }
 
 // Receive Functions ----------------------------------------------------------------------------------------------------------

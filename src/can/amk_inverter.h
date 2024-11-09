@@ -5,7 +5,7 @@
 //
 // Author: Cole Barach
 // Date Created: 2024.10.12
-// 
+//
 // Description: Object representing the AMK Racing Kit Inverter CAN node.
 //
 // To do:
@@ -30,7 +30,6 @@ typedef struct amkInverterConfig amkInverterConfig_t;
 struct amkInverter
 {
 	CAN_NODE_FIELDS;
-	
 	uint16_t baseId;
 };
 
