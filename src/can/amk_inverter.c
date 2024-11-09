@@ -69,8 +69,8 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 	//   Bytes 6 to 7: Negative torque limit (int16_t).
 	//     0.1% of rated torque (0.0098 Nm / LSB)
 
-	uint16_t controlWord = CONTROL_WORD_INVERTER_ON(inverterEnabled) | CONTROL_WORD_DC_ON(dcEnabled) |
-		CONTROL_WORD_ENABLE(driverEnabled);
+	uint16_t controlWord = CONTROL_WORD_INVERTER_ON (inverterEnabled) | CONTROL_WORD_DC_ON (dcEnabled) |
+		CONTROL_WORD_ENABLE (driverEnabled);
 	int16_t torqueRequestInt		= TORQUE_TO_WORD (torqueRequest);
 	int16_t torqueLimitPositiveInt	= TORQUE_TO_WORD (torqueLimitPositive);
 	int16_t torqueLimitNegativeInt	= TORQUE_TO_WORD (torqueLimitNegative);

@@ -7,7 +7,7 @@ float transferFunctionFilter (float x, float* a, float* b, float* w, size_t n)
 	//   Y(z) = H(z) * X(z)
 	//   y(k) = h(k) ** x(k)
 	//     where ** is the convolutional sum.
-	//   
+	//
 	//   H(z) = N(z) / D(z) = (b_0 + b_1 * z^-1 + ... + b_n * z^-n) / (a_0 + a_1 * z^-1 + ... + a_n * z^-n)
 	//
 	//   Y(z) = X(z) * N(z) / D(z)
@@ -25,7 +25,7 @@ float transferFunctionFilter (float x, float* a, float* b, float* w, size_t n)
 	//   Y(z) = N(z) * W(z)
 	//   Y(z) = (b_0 + b_1 * z^-1 + ... + b_n * z^-n) * W(z)
 	//   y(k) = b_0 * w(k) + b_1 * w(k-1) + ... + b_n * w(k-n)
-	
+
 	// Delay the state-vector: w(k-i) = w'(k-(i-1))
 	for (size_t i = n; i > 0; --i)
 		w[i] = w[i - 1];

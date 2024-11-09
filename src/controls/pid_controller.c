@@ -8,7 +8,7 @@ float pidCalculate (pidController_t* pid, float y, float deltaTime)
 	//   where:
 	//     x(k) is the control variable (output value),
 	//     y(k) is the process variable (input value),
-	//     y_sp is the set-point (target value) 
+	//     y_sp is the set-point (target value)
 	//
 	// Proportional Error Term:
 	//   p(k) = y_sp - y(k)
@@ -26,7 +26,7 @@ float pidCalculate (pidController_t* pid, float y, float deltaTime)
 
 	float i = p * deltaTime + pid->iPrime;
 	pid->iPrime = i;
-	
+
 	float d = (p - pid->dPrime) / deltaTime;
 	pid->dPrime = d;
 
@@ -39,14 +39,14 @@ float pidAntiWindup (pidController_t* pid, float y, float deltaTime, float xMin,
 	// rapidly (running away) when the output value is fully saturated. The
 	// simplest approach is to back-calculate a value for the integral term
 	// that doesn't saturate the output.
-	
+
 	// See above for PID calculation.
 
 	float p = pid->ySetPoint - y;
 
 	float i = p * deltaTime + pid->iPrime;
 	pid->iPrime = i;
-	
+
 	float d = (p - pid->dPrime) / deltaTime;
 	pid->dPrime = d;
 

@@ -32,12 +32,12 @@ void HardFault_Handler (void)
 	hardFaultCallback ();
 
 #if DEBUG_BACKTRACE
-	
+
 	asm ("mrs %0, psp" : "=r" (FAULT_PSP) : :);
 	stack_pointer = FAULT_PSP;
 
 #else
-	
+
 	// Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
 	// Get thread context. Contains main registers including PC and LR
 	struct port_extctx ctx;
@@ -89,10 +89,10 @@ void UsageFault_Handler (void)
 	hardFaultCallback ();
 
 #if DEBUG_BACKTRACE
-	
+
 	asm ("mrs %0, psp" : "=r" (FAULT_PSP) : :);
 	stack_pointer = FAULT_PSP;
-	
+
 #else
 
 	// Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info

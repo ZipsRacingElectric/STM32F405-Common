@@ -60,7 +60,7 @@ bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 	return true;
 }
 
-bool mc24lc32Init(mc24lc32_t* mc24lc32, mc24lc32Config_t *config)
+bool mc24lc32Init (mc24lc32_t* mc24lc32, mc24lc32Config_t *config)
 {
 	// Store the driver configuration
 	mc24lc32->addr			= config->addr;
@@ -77,14 +77,14 @@ bool mc24lc32Init(mc24lc32_t* mc24lc32, mc24lc32Config_t *config)
 bool mc24lc32Read (mc24lc32_t* mc24lc32)
 {
 	// Acquire the bus
-	i2cAcquireBus(mc24lc32->i2c);
+	i2cAcquireBus (mc24lc32->i2c);
 
 	// Perform a sequential read starting at address 0
-	bool result = mc24lc32SequentialRead(mc24lc32, 0x00, MC24LC32_SIZE);
-	
+	bool result = mc24lc32SequentialRead (mc24lc32, 0x00, MC24LC32_SIZE);
+
 	// Release the bus
 	i2cReleaseBus (mc24lc32->i2c);
-	
+
 	// If the transaction failed, exit early
 	if (!result)
 		return false;
@@ -121,7 +121,7 @@ bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data
 	i2cAcquireBus (mc24lc32->i2c);
 
 	// Write the cached data to the device.
-	bool result = mc24lc32PageWrite(mc24lc32, address, dataCount);
+	bool result = mc24lc32PageWrite (mc24lc32, address, dataCount);
 
 	// Release the bus
 	i2cReleaseBus (mc24lc32->i2c);
