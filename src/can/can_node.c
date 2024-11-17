@@ -20,15 +20,25 @@ void canNodeInit (canNode_t* node, canNodeConfig_t* config)
 	// Calculate the messsage flags that indicate validity.
 	node->validFlags = ((1 << config->messageCount) - 1);
 
+	// Initialize the mutex
+	chMtxObjectInit (&node->mutex);
+
+	// Reset the timeout condition
 	canNodeResetTimeout (node);
 }
 
 bool canNodeReceive (canNode_t* node, CANRxFrame* frame)
 {
+	// Lock the node to prevent access during modification.
+	canNodeLock (node);
+
 	// Call the receive handler, exit early if the message is not from this node.
 	int8_t result = node->receiveHandler (node, frame);
 	if (result < 0)
+	{
+		canNodeUnlock (node);
 		return false;
+	}
 
 	// Reset the timeout.
 	canNodeResetTimeout (node);
@@ -41,18 +51,29 @@ bool canNodeReceive (canNode_t* node, CANRxFrame* frame)
 	if (node->messageFlags == node->validFlags)
 		node->state = CAN_NODE_VALID;
 
+	// Release the node and return
+	canNodeUnlock (node);
 	return true;
 }
 
-void canNodeCheckTimeout (canNode_t* node, systime_t timeCurrent)
+void canNodeCheckTimeout (canNode_t* node, systime_t timePrevious, systime_t timeCurrent)
 {
+	// Lock the node to prevent access during modification.
+	canNodeLock (node);
+
 	// Skip this check if the node is already timed-out.
 	if (node->state == CAN_NODE_TIMEOUT)
+	{
+		canNodeUnlock (node);
 		return;
+	}
 
 	// Check the timeout deadline, exit early if not expired.
-	if (node->timeoutDeadline > timeCurrent)
+	if (chTimeIsInRangeX (timeCurrent, timePrevious, node->timeoutDeadline))
+	{
+		canNodeUnlock (node);
 		return;
+	}
 
 	// Enter the timeout state
 	node->state = CAN_NODE_TIMEOUT;
@@ -63,6 +84,19 @@ void canNodeCheckTimeout (canNode_t* node, systime_t timeCurrent)
 	// Call the node's timeout handler (if set)
 	if (node->timeoutHandler != NULL)
 		node->timeoutHandler (node);
+
+	// Release the node.
+	canNodeUnlock (node);
+}
+
+void canNodeLock (canNode_t* node)
+{
+	chMtxLock (&node->mutex);
+}
+
+void canNodeUnlock (canNode_t* node)
+{
+	chMtxUnlock (&node->mutex);
 }
 
 void canNodeResetTimeout (canNode_t* node)
@@ -84,9 +118,8 @@ bool canNodesReceive (canNode_t** nodes, uint8_t nodeCount, CANRxFrame* frame)
 	return false;
 }
 
-void canNodesCheckTimeout (canNode_t** nodes, uint8_t nodeCount)
+void canNodesCheckTimeout (canNode_t** nodes, uint8_t nodeCount, systime_t timePrevious, systime_t timeCurrent)
 {
-	systime_t timeCurrent = chVTGetSystemTime ();
 	for (uint8_t index = 0; index < nodeCount; ++index)
-		canNodeCheckTimeout (nodes [index], timeCurrent);
+		canNodeCheckTimeout (nodes [index], timePrevious, timeCurrent);
 }

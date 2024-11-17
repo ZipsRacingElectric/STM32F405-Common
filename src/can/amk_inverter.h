@@ -29,6 +29,8 @@ typedef struct
 {
 	CAN_NODE_FIELDS;
 	uint16_t baseId;
+
+	float dcBusVoltage;
 } amkInverter_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

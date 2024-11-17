@@ -12,6 +12,7 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // ChibiOS
+#include "ch.h"
 #include "hal.h"
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
@@ -48,7 +49,8 @@ typedef struct
 	sysinterval_t			timeoutPeriod;		\
 	systime_t				timeoutDeadline;	\
 	uint64_t				messageFlags;		\
-	uint64_t				validFlags
+	uint64_t				validFlags;			\
+	mutex_t					mutex
 
 /**
  * @brief Polymorphic base object representing a node in a CAN bus.
@@ -92,7 +94,19 @@ bool canNodeReceive (canNode_t* node, CANRxFrame* frame);
  * @param node The node to check.
  * @param timeCurrent The current system time.
  */
-void canNodeCheckTimeout (canNode_t* node, systime_t timeCurrent);
+void canNodeCheckTimeout (canNode_t* node, systime_t timePrevious, systime_t timeCurrent);
+
+/**
+ * @brief Locks a CAN node for exclusive access.
+ * @param node The node to lock.
+ */
+void canNodeLock (canNode_t* node);
+
+/**
+ * @brief Unlocks a previously locked CAN node.
+ * @param node The node to unlock.
+ */
+void canNodeUnlock (canNode_t* node);
 
 // CAN Node Array Functions ---------------------------------------------------------------------------------------------------
 
@@ -110,6 +124,6 @@ bool canNodesReceive (canNode_t** nodes, uint8_t nodeCount, CANRxFrame* frame);
  * @param nodes The array of nodes to check.
  * @param nodeCount The number of elements in @c nodes .
  */
-void canNodesCheckTimeout (canNode_t** nodes, uint8_t nodeCount);
+void canNodesCheckTimeout (canNode_t** nodes, uint8_t nodeCount, systime_t timePrevious, systime_t timeCurrent);
 
 #endif // CAN_NODE_H
