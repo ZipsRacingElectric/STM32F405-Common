@@ -8,8 +8,8 @@ $(CLANGD_FILE): $(CSRC) $(ALLINC)
 	for c in $(CSRC); do \
 		printf "\t{\n"												>> $(CLANGD_FILE); \
 		printf "\t\t\"directory\": \"$(CURDIR)/$(BUILDDIR)\",\n"	>> $(CLANGD_FILE); \
-		printf "\t\t\"command\": \"arm-none-eabi-gcc"				>> $(CLANGD_FILE); \
-		printf "%s" "--std=c99"										>> $(CLANGD_FILE); \
+		printf "\t\t\"command\": \"arm-none-eabi-gcc "				>> $(CLANGD_FILE); \
+		printf "%s" "--std=c99 -Wall -Wextra"						>> $(CLANGD_FILE); \
 		for i in $(ALLINC); do \
 			printf "%s" " -I$$i"									>> $(CLANGD_FILE); \
 		done; \
