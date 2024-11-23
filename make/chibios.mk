@@ -35,8 +35,7 @@ USE_PROCESS_STACKSIZE = 0x400
 USE_EXCEPTIONS_STACKSIZE = 0x400
 
 # Enables the use of FPU (no, softfp, hard).
-# TODO(Barach): This should be enabled
-USE_FPU = no
+USE_FPU = hard
 
 # FPU-related options.
 USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv4-sp-d16
