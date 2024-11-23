@@ -30,7 +30,19 @@ typedef struct
 	CAN_NODE_FIELDS;
 	uint16_t baseId;
 
-	float dcBusVoltage;
+	// Status
+	bool systemReady;
+	bool error;
+	bool warning;
+	bool quitDcOn;
+	bool dcOn;
+	bool quitInverter;
+	bool inverterOn;
+	bool derating;
+
+	// Torque
+	float actualTorque;
+	float actualSpeed;
 } amkInverter_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

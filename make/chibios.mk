@@ -6,13 +6,13 @@
 USE_OPT += -ggdb -fomit-frame-pointer -falign-functions=16
 
 # C specific options here (added to USE_OPT).
-USE_COPT = 
+USE_COPT =
 
 # Enable this if you want the linker to remove unused code and data.
 USE_LINK_GC = yes
 
 # Linker extra options here.
-USE_LDOPT = 
+USE_LDOPT =
 
 # Enable this if you want link time optimizations (LTO).
 USE_LTO = yes

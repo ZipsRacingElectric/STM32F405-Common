@@ -9,6 +9,9 @@
 #define TORQUE_TO_WORD(torque)	(int16_t) ((torque) * TORQUE_INVERSE_FACTOR)
 #define WORD_TO_TORQUE(word)	(((int16_t) (word)) * TORQUE_FACTOR)
 
+#define SPEED_FACTOR			0.00001f
+#define WORD_TO_SPEED(word)		(SPEED_FACTOR / ((int32_t) (word)))
+
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
 #define MOTOR_REQUEST_ID_OFFSET		0x000
@@ -25,6 +28,16 @@
 #define CONTROL_WORD_DC_ON(bit)			(((uint16_t) (bit)) << 9)
 #define CONTROL_WORD_ENABLE(bit)		(((uint16_t) (bit)) << 10)
 #define CONTROL_WORD_ERROR_RESET(bit)	(((uint16_t) (bit)) << 11)
+
+// AMK Status Word
+#define STATUS_WORD_SYSTEM_READY(word)	((((word) >> 8) & 0b1) == 0b1)
+#define STATUS_WORD_ERROR(word)			((((word) >> 9) & 0b1) == 0b1)
+#define STATUS_WORD_WARNING(word)		((((word) >> 10) & 0b1) == 0b1)
+#define STATUS_WORD_QUIT_DC_ON(word)	((((word) >> 11) & 0b1) == 0b1)
+#define STATUS_WORD_DC_ON(word)			((((word) >> 12) & 0b1) == 0b1)
+#define STATUS_WORD_QUIT_INVERTER(word)	((((word) >> 13) & 0b1) == 0b1)
+#define STATUS_WORD_INVERTER_ON(word)	((((word) >> 14) & 0b1) == 0b1)
+#define STATUS_WORD_DERATING(word)		((((word) >> 15) & 0b1) == 0b1)
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
@@ -99,9 +112,32 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 
 void amkHandleMotorFeedback (amkInverter_t* amk, CANRxFrame* frame)
 {
-	// TODO(Barach): Implementation
-	(void) amk;
-	(void) frame;
+	// Motor Feedback Message: (ID Offset 0x004)
+	//   Bytes 0 to 1: Status word (uint16_t)
+	//     Bit 0 to 7: Reserved
+	//     Bit 8: System ready
+	//     Bit 9: Error
+	//     Bit 10: Warning
+	//     Bit 11: Quit DC on
+	//     Bit 12: DC on
+	//     Bit 13: Quit inverter on
+	//     Bit 14: Inverter on
+	//     Bit 15: Derating
+	//   Bytes 2 to 3: Actual torque (int16_t)
+	//   Bytes 4 to 7: Actual speed (int32_t)
+
+	uint16_t statusWord = frame->data16 [0];
+	amk->systemReady	= STATUS_WORD_SYSTEM_READY (statusWord);
+	amk->error			= STATUS_WORD_ERROR (statusWord);
+	amk->warning		= STATUS_WORD_WARNING (statusWord);
+	amk->quitDcOn		= STATUS_WORD_QUIT_DC_ON (statusWord);
+	amk->dcOn			= STATUS_WORD_DC_ON (statusWord);
+	amk->quitInverter	= STATUS_WORD_QUIT_INVERTER (statusWord);
+	amk->inverterOn		= STATUS_WORD_INVERTER_ON (statusWord);
+	amk->derating		= STATUS_WORD_DERATING (statusWord);
+
+	amk->actualTorque	= WORD_TO_TORQUE (frame->data16 [1]);
+	amk->actualSpeed	= WORD_TO_SPEED (frame->data32 [1]);
 }
 
 int8_t amkReceiveHandler (void* node, CANRxFrame* frame)
