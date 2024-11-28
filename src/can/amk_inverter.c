@@ -49,14 +49,15 @@
  * @param dcEnabled Indicates whether the DC bus should be enabled (can be asserted any time).
  * @param driverEnabled Indicates whether the inverter driver should be enabled (cannot be asserted until quitInverter is
  * asserted).
+ * @param errorReset Indicates whether any present errors should be reset (can only be asserted if all setpoints are 0).
  * @param torqueRequest The torque to request from the motor.
  * @param torqueLimitPositive The positive torque limit to specify.
  * @param torqueLimitNegative The negative torque limit to specify.
  * @param timeout The interval to timeout after.
  * @return The result of the CAN operation.
  */
-msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, float torqueRequest,
-	float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout);
+msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, bool errorReset,
+	float torqueRequest, float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout);
 
 int8_t amkReceiveHandler (void* node, CANRxFrame* frame);
 
@@ -81,10 +82,10 @@ void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 
 // Transmit Functions ---------------------------------------------------------------------------------------------------------
 
-msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, systime_t timeout)
+msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, sysinterval_t timeout)
 {
 	// In order to energize, all setpoints must be set to 0.
-	return amkSendMotorRequest (amk, energized, true, energized, 0, 0, 0, timeout);
+	return amkSendMotorRequest (amk, energized, true, energized, false, 0, 0, 0, timeout);
 }
 
 msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqueLimitPositive, float torqueLimitNegative,
@@ -99,11 +100,24 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 		return amkSendEnergizationRequest (amk, true, timeout);
 
 	// Otherwise, send the torque request.
-	return amkSendMotorRequest (amk, true, true, true, torqueRequest, torqueLimitPositive, torqueLimitNegative, timeout);
+	return amkSendMotorRequest (amk, true, true, true, false, torqueRequest, torqueLimitPositive, torqueLimitNegative,
+		timeout);
 }
 
-msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, float torqueRequest,
-	float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout)
+msg_t amkSendErrorResetRequest (amkInverter_t* amk, sysinterval_t timeout)
+{
+	// Preserve the current settings.
+	canNodeLock ((canNode_t*) &amk);
+	bool inverterEnabled	= amk->state == CAN_NODE_VALID && amk->inverterOn;
+	bool dcEnabled			= amk->state == CAN_NODE_VALID && amk->dcOn;
+	bool driverEnabled		= inverterEnabled && dcEnabled;
+	canNodeUnlock ((canNode_t*) &amk);
+
+	return amkSendMotorRequest (amk, inverterEnabled, dcEnabled, driverEnabled, true, 0, 0, 0, timeout);
+}
+
+msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, bool errorReset,
+	float torqueRequest, float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout)
 {
 	// Motor Request Message: (ID Offset 0x000)
 	//   Bytes 0 to 1: Control word (uint16_t).
@@ -121,7 +135,7 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 	//     0.1% of rated torque (0.0098 Nm / LSB)
 
 	uint16_t controlWord = CONTROL_WORD_INVERTER_ON (inverterEnabled) | CONTROL_WORD_DC_ON (dcEnabled) |
-		CONTROL_WORD_ENABLE (driverEnabled);
+		CONTROL_WORD_ENABLE (driverEnabled) | CONTROL_WORD_ERROR_RESET (errorReset);
 	int16_t torqueRequestInt		= TORQUE_TO_WORD (torqueRequest);
 	int16_t torqueLimitPositiveInt	= TORQUE_TO_WORD (torqueLimitPositive);
 	int16_t torqueLimitNegativeInt	= TORQUE_TO_WORD (torqueLimitNegative);

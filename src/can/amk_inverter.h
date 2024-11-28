@@ -69,9 +69,11 @@ typedef struct
 
 void amkInit (amkInverter_t* amk, amkInverterConfig_t* config);
 
-msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, systime_t timeout);
+msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, sysinterval_t timeout);
 
 msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqueLimitPositive, float torqueLimitNegative,
 	sysinterval_t timeout);
+
+msg_t amkSendErrorResetRequest (amkInverter_t* amk, sysinterval_t timeout);
 
 #endif // AMK_INVERTER_H
