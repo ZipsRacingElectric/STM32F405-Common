@@ -41,6 +41,23 @@
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
+/**
+ * @brief Sends the specified torque request to an AMK inverter.
+ * @param amk The AMK inverter to send the message to.
+ * @param inverterEnabled Indicates whether the inverter controller should be enabled (cannot be set until quitDcOn is
+ * asserted).
+ * @param dcEnabled Indicates whether the DC bus should be enabled (can be asserted any time).
+ * @param driverEnabled Indicates whether the inverter driver should be enabled (cannot be asserted until quitInverter is
+ * asserted).
+ * @param torqueRequest The torque to request from the motor.
+ * @param torqueLimitPositive The positive torque limit to specify.
+ * @param torqueLimitNegative The negative torque limit to specify.
+ * @param timeout The interval to timeout after.
+ * @return The result of the CAN operation.
+ */
+msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, float torqueRequest,
+	float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout);
+
 int8_t amkReceiveHandler (void* node, CANRxFrame* frame);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -63,6 +80,27 @@ void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 }
 
 // Transmit Functions ---------------------------------------------------------------------------------------------------------
+
+msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, systime_t timeout)
+{
+	// In order to energize, all setpoints must be set to 0.
+	return amkSendMotorRequest (amk, energized, true, energized, 0, 0, 0, timeout);
+}
+
+msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqueLimitPositive, float torqueLimitNegative,
+	sysinterval_t timeout)
+{
+	canNodeLock ((canNode_t*) &amk);
+	bool energized = amk->state == CAN_NODE_VALID && amk->quitInverter;
+	canNodeUnlock ((canNode_t*) &amk);
+
+	// If the inverter isn't energized, send the request to energize.
+	if (!energized)
+		return amkSendEnergizationRequest (amk, true, timeout);
+
+	// Otherwise, send the torque request.
+	return amkSendMotorRequest (amk, true, true, true, torqueRequest, torqueLimitPositive, torqueLimitNegative, timeout);
+}
 
 msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, float torqueRequest,
 	float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout)
