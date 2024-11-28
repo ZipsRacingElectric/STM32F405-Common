@@ -8,7 +8,7 @@
 //
 // Description: Driver for the Microchip 24LC32 I2C EEPROM.
 //
-// To do:
+// TODO(Barach):
 // - Consider using a checksum for the contents of memory.
 
 // Includes -------------------------------------------------------------------------------------------------------------------

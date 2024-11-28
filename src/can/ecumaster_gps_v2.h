@@ -8,7 +8,7 @@
 //
 // Description: Object representing the ECUMaster GPS CAN module.
 //
-// To do:
+// TODO(Barach):
 // - Handler implementations.
 
 // Includes -------------------------------------------------------------------------------------------------------------------

@@ -9,7 +9,7 @@ $(CLANGD_FILE): $(CSRC) $(ALLINC)
 		printf "\t{\n"												>> $(CLANGD_FILE); \
 		printf "\t\t\"directory\": \"$(CURDIR)/$(BUILDDIR)\",\n"	>> $(CLANGD_FILE); \
 		printf "\t\t\"command\": \"arm-none-eabi-gcc "				>> $(CLANGD_FILE); \
-		printf "%s" "--std=c99 -Wall -Wextra"						>> $(CLANGD_FILE); \
+		printf "%s" "--std=c99 $(USE_OPT)"							>> $(CLANGD_FILE); \
 		for i in $(ALLINC); do \
 			printf "%s" " -I$$i"									>> $(CLANGD_FILE); \
 		done; \
