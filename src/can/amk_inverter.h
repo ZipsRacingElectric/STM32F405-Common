@@ -7,9 +7,6 @@
 // Date Created: 2024.10.12
 //
 // Description: Object representing the AMK Racing Kit Inverter CAN node.
-//
-// TODO(Barach):
-// - Handler / transmit implementations.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -63,6 +60,15 @@ typedef struct
 
 	/// @brief The actual speed of the motor shaft.
 	float actualSpeed;
+
+	/// @brief The measured voltage of the DC bus.
+	float dcBusVoltage;
+
+	// TODO(Barach): Docs
+	float torqueCurrent;
+
+	/// @brief The actual power consumption of the device.
+	float actualPower;
 } amkInverter_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

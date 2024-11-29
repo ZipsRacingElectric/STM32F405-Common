@@ -9,17 +9,30 @@
 #define TORQUE_TO_WORD(torque)	(int16_t) ((torque) * TORQUE_INVERSE_FACTOR)
 #define WORD_TO_TORQUE(word)	(((int16_t) (word)) * TORQUE_FACTOR)
 
+// Speed values (unit RPM)
 #define SPEED_FACTOR			0.00001f
 #define WORD_TO_SPEED(word)		(SPEED_FACTOR / ((int32_t) (word)))
+
+// Voltage values (unit V)
+#define WORD_TO_VOLTAGE(word)	((uint16_t) (word))
+
+// Current values (unit A)
+#define WORD_TO_CURRENT(word)	((int16_t) (word))
+
+// Power values (unit W)
+#define WORD_TO_POWER(word)		((uint32_t) (word))
+
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
 #define MOTOR_REQUEST_ID_OFFSET		0x000
 #define MOTOR_FEEDBACK_ID_OFFSET	0x004
+#define POWER_CONSUMPTION_ID_OFFSET	0x008
 
 // Message Flags --------------------------------------------------------------------------------------------------------------
 
-#define MOTOR_FEEDBACK_FLAG_POS 0x00
+#define MOTOR_FEEDBACK_FLAG_POS 	0x00
+#define POWER_CONSUMPTION_FLAG_POS	0x01
 
 // Message Packing ------------------------------------------------------------------------------------------------------------
 
@@ -75,7 +88,7 @@ void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 		.receiveHandler	= amkReceiveHandler,
 		.timeoutHandler	= NULL,
 		.timeoutPeriod	= config->timeoutPeriod,
-		.messageCount	= 1
+		.messageCount	= 2
 	};
 	canNodeInit ((canNode_t*) amk, &canConfig);
 }
@@ -192,6 +205,18 @@ void amkHandleMotorFeedback (amkInverter_t* amk, CANRxFrame* frame)
 	amk->actualSpeed	= WORD_TO_SPEED (frame->data32 [1]);
 }
 
+void amkHandlePowerConsumption (amkInverter_t* amk, CANRxFrame* frame)
+{
+	// Power Consumption Message: (ID Offset 0x008)
+	//   Bytes 0 to 1: DC bus voltage (uint16_t)
+	//   Bytes 2 to 3: Torque current (int16_T)
+	//   Bytes 4 to 7: Actual power (uint32_t)
+
+	amk->dcBusVoltage	= WORD_TO_VOLTAGE (frame->data16 [0]);
+	amk->torqueCurrent	= WORD_TO_CURRENT (frame->data16 [1]);
+	amk->actualPower	= WORD_TO_POWER (frame->data32 [1]);
+}
+
 int8_t amkReceiveHandler (void* node, CANRxFrame* frame)
 {
 	amkInverter_t* amk = (amkInverter_t*) node;
@@ -203,6 +228,12 @@ int8_t amkReceiveHandler (void* node, CANRxFrame* frame)
 		// Motor feedback message.
 		amkHandleMotorFeedback (amk, frame);
 		return MOTOR_FEEDBACK_FLAG_POS;
+	}
+	if (id == amk->baseId + POWER_CONSUMPTION_ID_OFFSET)
+	{
+		// Power consumption message.
+		amkHandlePowerConsumption (amk, frame);
+		return POWER_CONSUMPTION_FLAG_POS;
 	}
 	else
 	{
