@@ -46,7 +46,7 @@ USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv4-sp-d16
 MCU = cortex-m4
 
 # Include the config directory
-ALLINC += $(CURDIR)/$(CONFDIR)
+ALLINC += $(CONFDIR)
 
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
@@ -61,7 +61,7 @@ include $(CHIBIOS)/os/hal/osal/rt-nil/osal.mk
 
 # Board Files
 ALLCSRC += $(BOARDDIR)/board.c
-ALLINC += $(CURDIR)/$(BOARDDIR)
+ALLINC += $(BOARDDIR)
 
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk

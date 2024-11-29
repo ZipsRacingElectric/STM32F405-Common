@@ -1,7 +1,5 @@
-# TODO(Barach): This shouldn't require absolute path (CURDIR).
-
 # Common library includes
-ALLINC += $(CURDIR)/common/src/
+ALLINC += common/src/
 
 # ChibiOS comilation
 include common/make/chibios.mk
