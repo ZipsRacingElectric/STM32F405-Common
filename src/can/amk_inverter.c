@@ -10,6 +10,7 @@
 #define WORD_TO_TORQUE(word)	(((int16_t) (word)) * TORQUE_FACTOR)
 
 // Speed values (unit RPM)
+// TODO(Barach): Are you sure this is correct? It looked to be proportional in testing.
 #define SPEED_FACTOR			0.00001f
 #define WORD_TO_SPEED(word)		(SPEED_FACTOR / ((int32_t) (word)))
 
@@ -21,7 +22,6 @@
 
 // Power values (unit W)
 #define WORD_TO_POWER(word)		((uint32_t) (word))
-
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
@@ -104,9 +104,9 @@ msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, sysinterva
 msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqueLimitPositive, float torqueLimitNegative,
 	sysinterval_t timeout)
 {
-	canNodeLock ((canNode_t*) &amk);
+	canNodeLock ((canNode_t*) amk);
 	bool energized = amk->state == CAN_NODE_VALID && amk->quitInverter;
-	canNodeUnlock ((canNode_t*) &amk);
+	canNodeUnlock ((canNode_t*) amk);
 
 	// If the inverter isn't energized, send the request to energize.
 	if (!energized)
@@ -120,11 +120,11 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 msg_t amkSendErrorResetRequest (amkInverter_t* amk, sysinterval_t timeout)
 {
 	// Preserve the current settings.
-	canNodeLock ((canNode_t*) &amk);
+	canNodeLock ((canNode_t*) amk);
 	bool inverterEnabled	= amk->state == CAN_NODE_VALID && amk->inverterOn;
 	bool dcEnabled			= amk->state == CAN_NODE_VALID && amk->dcOn;
 	bool driverEnabled		= inverterEnabled && dcEnabled;
-	canNodeUnlock ((canNode_t*) &amk);
+	canNodeUnlock ((canNode_t*) amk);
 
 	return amkSendMotorRequest (amk, inverterEnabled, dcEnabled, driverEnabled, true, 0, 0, 0, timeout);
 }
