@@ -35,6 +35,7 @@ float pidCalculate (pidController_t* pid, float y, float deltaTime);
 /**
  * @brief Calculates the output value to set according to the givent PID controller. Integral anti-windup is used to prevent
  * runaway when output is saturated.
+ * @note The integral coefficient ( @c ki ) cannot be equal to 0.
  * @param pid The PID controller to use.
  * @param y The measured value of the process variable.
  * @param deltaTime The amount of time ellapsed since the last update (in seconds).
