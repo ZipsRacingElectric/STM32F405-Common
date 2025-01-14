@@ -1,6 +1,9 @@
 // Header
 #include "pid_controller.h"
 
+// C Standard Library
+#include <math.h>
+
 float pidCalculate (pidController_t* pid, float y, float deltaTime)
 {
 	// PID Controller Output:
@@ -28,7 +31,13 @@ float pidCalculate (pidController_t* pid, float y, float deltaTime)
 	pid->iPrime = i;
 
 	float d = (p - pid->dPrime) / deltaTime;
-	pid->dPrime = d;
+	pid->dPrime = p;
+
+	// Prevent NaN propogation
+	if (pid->iPrime != pid->iPrime)
+		pid->iPrime = 0.0f;
+	if (pid->dPrime != pid->dPrime)
+		pid->dPrime = 0.0f;
 
 	return pid->kp * p + pid->ki * i + pid->kd * d;
 }
@@ -48,7 +57,13 @@ float pidAntiWindup (pidController_t* pid, float y, float deltaTime, float xMin,
 	pid->iPrime = i;
 
 	float d = (p - pid->dPrime) / deltaTime;
-	pid->dPrime = d;
+	pid->dPrime = p;
+
+	// Prevent NaN propogation
+	if (isnan (pid->iPrime) || isinf (pid->iPrime))
+		pid->iPrime = 0.0f;
+	if (isnan (pid->dPrime) || isinf (pid->dPrime))
+		pid->dPrime = 0.0f;
 
 	float nonIntegral = pid->kp * p + pid->kd * d;
 	float x = nonIntegral + pid->ki * i;
