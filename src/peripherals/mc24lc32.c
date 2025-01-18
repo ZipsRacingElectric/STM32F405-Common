@@ -28,15 +28,15 @@ bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t co
 
 	// Receive into cache
 	uint8_t* rx = mc24lc32->cache + address;
-	
+
 	msg_t result =  i2cMasterTransmit (mc24lc32->i2c, mc24lc32->addr, tx, 2, rx, count);
-	
+
 	if (result != MSG_OK)
 	{
 		mc24lc32->state = MC24LC32_STATE_FAILED;
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -48,15 +48,15 @@ bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 
 	// Max of 32 bytes of data follow
 	memcpy (tx + 2, mc24lc32->cache + address, count);
-	
+
 	msg_t result = i2cMasterTransmit (mc24lc32->i2c, mc24lc32->addr, tx, count + 2, NULL, 0);
-	
+
 	if (result != MSG_OK)
 	{
 		mc24lc32->state = MC24LC32_STATE_FAILED;
 		return false;
 	}
-	
+
 	return true;
 }
 
