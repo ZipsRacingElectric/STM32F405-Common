@@ -93,6 +93,55 @@ void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 	canNodeInit ((canNode_t*) amk, &canConfig);
 }
 
+amkInverterState_t amkGetState (amkInverter_t* amk)
+{
+	if (amk->state != CAN_NODE_VALID)
+		return AMK_STATE_INVALID;
+	if (amk->error || !amk->systemReady)
+		return AMK_STATE_ERROR;
+	if (amk->quitInverter)
+		return AMK_STATE_READY_ENERGIZED;
+	if (amk->quitDcOn)
+		return AMK_STATE_READY_HIGH_VOLTAGE;
+
+	return AMK_STATE_READY_LOW_VOLTAGE;
+}
+
+amkInverterState_t amksGetState (amkInverter_t* amks, uint32_t count)
+{
+	// Start with the lowest priority state.
+	amkInverterState_t globalState = AMK_STATE_READY_ENERGIZED;
+
+	for (uint32_t index = 0; index < count; ++index)
+	{
+		amkInverter_t* amk = amks + index;
+		canNodeLock ((canNode_t*) amk);
+		amkInverterState_t state = amkGetState (amk);
+		canNodeUnlock ((canNode_t*) amk);
+
+		// If the state of an inverter is higher priority than the rest of the group, demote the priority.
+		if (state < globalState)
+			globalState = state;
+	}
+
+	return globalState;
+}
+
+float amksGetCumulativePower (amkInverter_t* amks, uint32_t count)
+{
+	float totalPower = 0.0f;
+
+	for (uint32_t index = 0; index < count; ++index)
+	{
+		amkInverter_t* amk = amks + index;
+		canNodeLock ((canNode_t*) amk);
+		totalPower += amk->actualPower;
+		canNodeUnlock ((canNode_t*) amk);
+	}
+
+	return totalPower;
+}
+
 // Transmit Functions ---------------------------------------------------------------------------------------------------------
 
 msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, sysinterval_t timeout)
