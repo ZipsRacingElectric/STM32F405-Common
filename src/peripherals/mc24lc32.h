@@ -7,9 +7,6 @@
 // Date Created: 2024.09.29
 //
 // Description: Driver for the Microchip 24LC32 I2C EEPROM.
-//
-// TODO(Barach):
-// - Consider using a checksum for the contents of memory.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

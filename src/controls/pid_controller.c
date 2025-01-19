@@ -70,12 +70,20 @@ float pidAntiWindup (pidController_t* pid, float y, float deltaTime, float xMin,
 
 	if (x > xMax)
 	{
-		pid->iPrime = (xMax - nonIntegral) / pid->ki;
+		if (pid->ki != 0)
+			pid->iPrime = (xMax - nonIntegral) / pid->ki;
+		else
+			pid->iPrime = 0;
+
 		x = xMax;
 	}
 	else if (x < xMin)
 	{
-		pid->iPrime = (xMin - nonIntegral) / pid->ki;
+		if (pid->ki != 0)
+			pid->iPrime = (xMin - nonIntegral) / pid->ki;
+		else
+			pid->iPrime = 0;
+
 		x = xMin;
 	}
 

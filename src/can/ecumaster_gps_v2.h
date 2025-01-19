@@ -7,9 +7,6 @@
 // Date Created: 2024.10.05
 //
 // Description: Object representing the ECUMaster GPS CAN module.
-//
-// TODO(Barach):
-// - Handler implementations.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
