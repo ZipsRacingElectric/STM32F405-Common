@@ -114,11 +114,34 @@ typedef struct
 void amkInit (amkInverter_t* amk, amkInverterConfig_t* config);
 
 /**
- * @brief Gets the current state of the inverter, as an enum. Note the CAN node should be locked beforehand.
+ * @brief Gets the current state of the inverter, as an enum.
+ * @note The CAN node should be locked beforehand.
  * @param amk The inverter to check the state of.
  * @return The state of the inverter.
  */
 amkInverterState_t amkGetState (amkInverter_t* amk);
+
+/**
+ * @brief Calls @c amkGetState while locking the CAN node.
+ * @param amk The inverter to check the state of.
+ * @return The state of the inverter.
+ */
+amkInverterState_t amkGetStateLock (amkInverter_t* amk);
+
+/**
+ * @brief Gets the current state of the inverter, indicating whether or not it is valid (not in an error state).
+ * @note The CAN node should be locked beforehand.
+ * @param amk The inverter to check the validity of.
+ * @return True if the inverter is in the ready state, false otherwise.
+ */
+bool amkGetValidity (amkInverter_t* amk);
+
+/**
+ * @brief Calls @c amkGetValidity while locking the CAN node.
+ * @param amk The inverter to check the validity of.
+ * @return True if the inverter is in the ready state, false otherwise.
+ */
+bool amkGetValidityLock (amkInverter_t* amk);
 
 /**
  * @brief Clamps a torque value to the maximum requestable range.

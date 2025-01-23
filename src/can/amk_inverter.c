@@ -107,6 +107,27 @@ amkInverterState_t amkGetState (amkInverter_t* amk)
 	return AMK_STATE_READY_LOW_VOLTAGE;
 }
 
+amkInverterState_t amkGetStateLock (amkInverter_t* amk)
+{
+	canNodeLock ((canNode_t*) amk);
+	amkInverterState_t state = amkGetState (amk);
+	canNodeUnlock ((canNode_t*) amk);
+	return state;
+}
+
+bool amkGetValidity (amkInverter_t* amk)
+{
+	return amk->state == CAN_NODE_VALID && !amk->error;
+}
+
+bool amkGetValidityLock (amkInverter_t* amk)
+{
+	canNodeLock ((canNode_t*) amk);
+	bool valid = amkGetValidity (amk);
+	canNodeUnlock ((canNode_t*) amk);
+	return valid;
+}
+
 amkInverterState_t amksGetState (amkInverter_t* amks, uint32_t count)
 {
 	// Start with the lowest priority state.
