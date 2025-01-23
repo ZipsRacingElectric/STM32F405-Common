@@ -161,7 +161,8 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 	if (!energized)
 		return amkSendEnergizationRequest (amk, true, timeout);
 
-	// Otherwise, send the torque request.
+	// Otherwise, clamp and send the request.
+	amkClampTorqueRequest (&torqueRequest);
 	return amkSendMotorRequest (amk, true, true, true, false, torqueRequest, torqueLimitPositive, torqueLimitNegative,
 		timeout);
 }

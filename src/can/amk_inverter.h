@@ -13,6 +13,22 @@
 // Includes
 #include "can_node.h"
 
+// Macros ---------------------------------------------------------------------------------------------------------------------
+
+/// @brief The maximum amount of requestable driving torque, in Nm.
+#define AMK_DRIVING_TORQUE_MAX 21.0f
+
+/// @brief The maximum amount of requestable regenerative torque, in Nm. Note that this value is a magnitude, actual regen
+/// requests are negative.
+#define AMK_REGENERATIVE_TORQUE_MAX 9.8f
+
+/**
+ * @brief Checks whether or not a torque value is a valid requestable value.
+ * @param torque The torque to be requested, in Nm.
+ * @return True if the value is value, false otherwise.
+ */
+#define amkTorqueRequestValid(torque) ((torque) <= AMK_DRIVING_TORQUE_MAX && (torque) >= -AMK_REGENERATIVE_TORQUE_MAX)
+
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
 typedef struct
@@ -103,6 +119,26 @@ void amkInit (amkInverter_t* amk, amkInverterConfig_t* config);
  * @return The state of the inverter.
  */
 amkInverterState_t amkGetState (amkInverter_t* amk);
+
+/**
+ * @brief Clamps a torque value to the maximum requestable range.
+ * @param torque The torque to be clamped.
+ * @return True if the value was clamped, false otherwise.
+ */
+inline bool amkClampTorqueRequest (float* torque)
+{
+	if (*torque > AMK_DRIVING_TORQUE_MAX)
+	{
+		*torque = AMK_DRIVING_TORQUE_MAX;
+		return true;
+	}
+	if (*torque < -AMK_REGENERATIVE_TORQUE_MAX)
+	{
+		*torque = -AMK_REGENERATIVE_TORQUE_MAX;
+		return true;
+	}
+	return false;
+}
 
 // Array Functions ------------------------------------------------------------------------------------------------------------
 
