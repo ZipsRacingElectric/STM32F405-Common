@@ -44,7 +44,7 @@ bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t co
 bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 {
 	// Transactions starts with address (big-endian)
-	uint8_t tx [PAGE_SIZE + 2] = { (uint8_t) (address) >> 8, (uint8_t) (address) };
+	uint8_t tx [PAGE_SIZE + 2] = { (uint8_t) ((address) >> 8), (uint8_t) (address) };
 
 	// Max of 32 bytes of data follow
 	memcpy (tx + 2, mc24lc32->cache + address, count);
