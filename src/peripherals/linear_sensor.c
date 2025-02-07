@@ -34,8 +34,14 @@ void linearSensorUpdate (void* object, adcsample_t sample)
 		return;
 
 	// Check the sample is in the valid range
-	bool valid = sample >= sensor->config->sampleMin && sample <= sensor->config->sampleMax;
-	sensor->state = valid ? LINEAR_SENSOR_VALID : LINEAR_SENSOR_VALUE_INVALID;
+	if (sample < sensor->config->sampleMin || sample > sensor->config->sampleMax)
+	{
+		sensor->state = LINEAR_SENSOR_VALUE_INVALID;
+		sensor->value = 0;
+		return;
+	}
+
+	sensor->state = LINEAR_SENSOR_VALID;
 
 	// Map input min to output min, input max to output max.
 	sensor->value = lerp2d (sample, sensor->config->sampleMin, sensor->config->valueMin,
