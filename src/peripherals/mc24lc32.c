@@ -18,11 +18,17 @@ bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t co
 
 bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count);
 
+bool mc24lc32AcknowledgePoll (mc24lc32_t* mc24lc32);
+
 // Function Definitions -------------------------------------------------------------------------------------------------------
 
 /// @brief Read a sequential section of memory (see datasheet Section 8.3).
 bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t count)
 {
+	// Check the device is available for transfer
+	if (!mc24lc32AcknowledgePoll (mc24lc32))
+		return false;
+
 	// Transactions starts with address (big-endian)
 	uint8_t tx [2] = { (uint8_t) (address) >> 8, (uint8_t) (address) };
 
@@ -43,6 +49,10 @@ bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t co
 /// @brief Write into a page of memory (see datasheet Section 6.2).
 bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 {
+	// Check the device is available for transfer
+	if (!mc24lc32AcknowledgePoll (mc24lc32))
+		return false;
+
 	// Transactions starts with address (big-endian)
 	uint8_t tx [PAGE_SIZE + 2] = { (uint8_t) ((address) >> 8), (uint8_t) (address) };
 
@@ -60,12 +70,30 @@ bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 	return true;
 }
 
+bool mc24lc32AcknowledgePoll (mc24lc32_t* mc24lc32)
+{
+	systime_t timeStart = chVTGetSystemTime ();
+
+	uint8_t tx [2] = { 0x00, 0x00 };
+
+	while (chTimeDiffX (timeStart, chVTGetSystemTime ()) < mc24lc32->timeoutPeriod)
+	{
+		msg_t result = i2cMasterTransmit (mc24lc32->i2c, mc24lc32->addr, tx, 2, NULL, 0);
+		if (result == MSG_OK)
+			return true;
+	}
+
+	mc24lc32->state = MC24LC32_STATE_FAILED;
+	return false;
+}
+
 bool mc24lc32Init (mc24lc32_t* mc24lc32, mc24lc32Config_t *config)
 {
 	// Store the driver configuration
 	mc24lc32->addr			= config->addr;
 	mc24lc32->i2c			= config->i2c;
 	mc24lc32->magicString	= config->magicString;
+	mc24lc32->timeoutPeriod	= config->timeoutPeriod;
 
 	// Start the device in the ready state
 	mc24lc32->state = MC24LC32_STATE_READY;

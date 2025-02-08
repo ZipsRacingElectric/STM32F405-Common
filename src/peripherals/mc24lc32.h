@@ -35,6 +35,10 @@ typedef struct
 	/// @brief The IC2 bus of the device.
 	I2CDriver* i2c;
 
+	/// @brief The timeout interval for the device's acknowledgement polling. If the device does not send an acknowledgement
+	/// within this timeframe, it will be considered invalid.
+	sysinterval_t timeoutPeriod;
+
 	/// @brief The magic string used to validate the EEPROM's contents.
 	const char* magicString;
 } mc24lc32Config_t;
@@ -56,6 +60,10 @@ typedef struct
 
 	/// @brief Cached copy of the EEPROM's contents. Use for read / write operations.
 	uint8_t cache [MC24LC32_SIZE];
+
+	/// @brief The timeout interval for the device's acknowledgement polling. If the device does not send an acknowledgement
+	/// within this timeframe, it will be considered invalid.
+	sysinterval_t timeoutPeriod;
 } mc24lc32_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
