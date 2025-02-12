@@ -51,10 +51,10 @@ float bilinearInterpolation (float x3, float y3, float x1, float y1, float x2, f
 	float y = inverseLerp (y3, y1, y2);
 
 	// Lerp the 1st X-Z plane
-	float z1 = lerp (x, z11, z12);
+	float z1 = lerp (x, z11, z21);
 
 	// Lerp the 2nd X-Z plane
-	float z2 = lerp (x, z21, z22);
+	float z2 = lerp (x, z12, z22);
 
 	// Lerp the central Y-Z plane
 	return lerp (y, z1, z2);

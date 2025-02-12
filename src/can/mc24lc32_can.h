@@ -7,6 +7,8 @@
 // Date Created: 2025.01.23
 //
 // Description: Group of functions for sending / receiving EEPROM-related CAN messages.
+//
+// TODO(Barach): Shorten this handshake.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
