@@ -22,16 +22,21 @@
 
 #define RESPONSE_TIMEOUT TIME_MS2I (100)
 
+// Global Constants -----------------------------------------------------------------------------------------------------------
+
+static const uint32_t INVALID_READ_DATA = 0xFFFFFFFF;
+
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
-msg_t transmitDataResponse (CANDriver* driver, sysinterval_t timeout, uint16_t id, uint16_t address, uint8_t* data,
+msg_t transmitDataResponse (CANDriver* driver, sysinterval_t timeout, uint16_t id, uint16_t address, const void* data,
 	uint8_t dataCount);
 
 msg_t transmitValidationResponse (CANDriver* driver, sysinterval_t timeout, uint16_t id, bool isValid);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t* eeprom)
+void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t* eeprom,
+	mc24lc32ReadonlyCallback_t readonlyCallback)
 {
 	// EEPROM Command Message:
 	//   Bytes 0 to 1: Instruction
@@ -76,9 +81,23 @@ void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t*
 
 		if (readNotWrite)
 		{
-			// Data read
-			uint8_t* data = eeprom->cache + address;
-			transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, data, dataCount);
+			if (address >= MC24LC32_SIZE)
+			{
+				// Readonly variable read
+				void* data = NULL;
+				uint8_t dataCount;
+				if (readonlyCallback != NULL && readonlyCallback (address, &data, &dataCount))
+					transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, data, dataCount);
+				else
+					transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, &INVALID_READ_DATA, 4);
+			}
+			else
+			{
+				// Data read
+				uint8_t* data = eeprom->cache + address;
+				transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, data, dataCount);
+			}
+
 		}
 		else
 		{
@@ -90,7 +109,7 @@ void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t*
 	}
 }
 
-msg_t transmitDataResponse (CANDriver* driver, sysinterval_t timeout, uint16_t id, uint16_t address, uint8_t* data, uint8_t dataCount)
+msg_t transmitDataResponse (CANDriver* driver, sysinterval_t timeout, uint16_t id, uint16_t address, const void* data, uint8_t dataCount)
 {
 	// EEPROM Command Message:
 	//   Bytes 0 to 1: Instruction
