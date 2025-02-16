@@ -1,6 +1,15 @@
 #ifndef LERP_H
 #define LERP_H
 
+// Linear Interpolation -------------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: 2025.01.30
+//
+// Description: Group of functions related to linear interpolation.
+
+// Functions ------------------------------------------------------------------------------------------------------------------
+
 /**
  * @brief Performs linear interpolation between the values A and B.
  * @param x The input scalar, [0, 1].

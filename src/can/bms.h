@@ -5,7 +5,7 @@
 //
 // Author: Cole Barach
 // Date Created: 2024.10.16
-// 
+//
 // Description: Object representing the BMS CAN node.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
