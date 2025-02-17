@@ -35,7 +35,7 @@ msg_t transmitValidationResponse (CANDriver* driver, sysinterval_t timeout, uint
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t* eeprom,
+bool mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t* eeprom,
 	mc24lc32ReadonlyCallback_t readonlyCallback)
 {
 	// EEPROM Command Message:
@@ -59,6 +59,7 @@ void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t*
 			// Validation read
 			bool isValid = mc24lc32IsValid (eeprom);
 			transmitValidationResponse (driver, RESPONSE_TIMEOUT, responseId, isValid);
+			return false;
 		}
 		else
 		{
@@ -72,6 +73,7 @@ void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t*
 				mc34lc32Invalidate (eeprom);
 
 			mc24lc32Write (eeprom);
+			return true;
 		}
 	}
 	else
@@ -90,6 +92,8 @@ void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t*
 					transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, data, dataCount);
 				else
 					transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, &INVALID_READ_DATA, 4);
+
+				return false;
 			}
 			else
 			{
@@ -105,6 +109,7 @@ void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t*
 			// Write the changes to the EEPROM.
 			uint8_t* data = frame->data8 + 4;
 			mc24lc32WriteThrough (eeprom, address, data, dataCount);
+			return true;
 		}
 	}
 }

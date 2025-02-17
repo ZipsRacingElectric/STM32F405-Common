@@ -36,8 +36,9 @@ typedef bool mc24lc32ReadonlyCallback_t (uint16_t addr, void** data, uint8_t* da
  * @param driver The CAN driver to transmit the response on.
  * @param eeprom The EEPROM to read from / write to.
  * @param readonlyCallback Hook for accessing readonly variable data. Use @c NULL to disable readonly addresses.
+ * @return True if the EEPROM's memory is dirty, false otherwise.
  */
-void mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t* eeprom,
+bool mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t* eeprom,
 	mc24lc32ReadonlyCallback_t readonlyCallback);
 
 #endif // MC24LC32_CAN_H
