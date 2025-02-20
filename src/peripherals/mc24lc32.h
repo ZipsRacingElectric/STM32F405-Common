@@ -46,14 +46,15 @@ typedef struct
 /// @brief Driver for the Microchip 24LC32 I2C EEPROM.
 typedef struct
 {
+	/// @brief Cached copy of the EEPROM's contents. Use for read / write operations.
+	/// @note This field should always be first in its struct to ensure 4-byte alignment.
+	uint8_t cache [MC24LC32_SIZE];
+
 	/// @brief The device's configuration.
 	const mc24lc32Config_t* config;
 
 	/// @brief State of the device.
 	mc24lc32State_t state;
-
-	/// @brief Cached copy of the EEPROM's contents. Use for read / write operations.
-	uint8_t cache [MC24LC32_SIZE];
 } mc24lc32_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
