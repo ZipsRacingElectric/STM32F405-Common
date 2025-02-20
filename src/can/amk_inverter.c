@@ -76,7 +76,7 @@ int8_t amkReceiveHandler (void* node, CANRxFrame* frame);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
+void amkInit (amkInverter_t* amk, const amkInverterConfig_t* config)
 {
 	// Store the configuration
 	amk->baseId = config->baseId;

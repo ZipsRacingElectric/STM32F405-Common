@@ -1,7 +1,7 @@
 // Header
 #include "analog.h"
 
-bool analogInit (analog_t* analog, analogConfig_t* config)
+bool analogInit (analog_t* analog, const analogConfig_t* config)
 {
 	// Store the configuration.
 	analog->config = config;

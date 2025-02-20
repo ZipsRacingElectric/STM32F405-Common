@@ -7,6 +7,9 @@
 // Date Created: 2024.10.16
 //
 // Description: Object representing the BMS CAN node.
+//
+// TODO(Barach): I don't actually have any use for this at the minute. Ideally this'd be for negotiating regen with the VCU,
+//   but we don't currently have any model for this yet.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

@@ -111,7 +111,7 @@ typedef struct
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void amkInit (amkInverter_t* amk, amkInverterConfig_t* config);
+void amkInit (amkInverter_t* amk, const amkInverterConfig_t* config);
 
 /**
  * @brief Gets the current state of the inverter, as an enum.

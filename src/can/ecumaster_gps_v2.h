@@ -53,6 +53,6 @@ typedef struct
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void ecumasterInit (ecumasterGps_t* gps, ecumasterGpsConfig_t* config);
+void ecumasterInit (ecumasterGps_t* gps, const ecumasterGpsConfig_t* config);
 
 #endif // ECUMASTER_GPS_V2_H

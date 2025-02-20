@@ -52,7 +52,7 @@ int8_t ecumasterReceiveHandler (void* node, CANRxFrame* frame);
 
 // Functions -------------------------------------------------------------------------------------------------------------------
 
-void ecumasterInit (ecumasterGps_t* gps, ecumasterGpsConfig_t* config)
+void ecumasterInit (ecumasterGps_t* gps, const ecumasterGpsConfig_t* config)
 {
 	// Initialize the CAN node
 	canNodeConfig_t nodeConfig =

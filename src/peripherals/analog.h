@@ -43,9 +43,9 @@ typedef struct
 
 typedef struct
 {
-	analogConfig_t*		config;
-	ADCConversionGroup	group;
-	adcsample_t			buffer [ANALOG_CHANNEL_COUNT];
+	const analogConfig_t* config;
+	ADCConversionGroup group;
+	adcsample_t buffer [ANALOG_CHANNEL_COUNT];
 } analog_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ typedef struct
  * @param config The configuration to use.
  * @return True if successful, false otherwise.
  */
-bool analogInit (analog_t* analog, analogConfig_t* config);
+bool analogInit (analog_t* analog, const analogConfig_t* config);
 
 /**
  * @brief Samples all of the ADC's channels, blocking until the operation is complete.

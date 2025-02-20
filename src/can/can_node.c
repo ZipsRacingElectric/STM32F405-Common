@@ -7,7 +7,7 @@ void canNodeResetTimeout (canNode_t* node);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void canNodeInit (canNode_t* node, canNodeConfig_t* config)
+void canNodeInit (canNode_t* node, const canNodeConfig_t* config)
 {
 	// Store the configuration
 	node->driver			= config->driver;

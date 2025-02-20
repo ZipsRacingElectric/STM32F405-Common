@@ -77,7 +77,7 @@ void canFaultCallback (msg_t result);
  * @param node The node to initialize.
  * @param config The configuration to use.
  */
-void canNodeInit (canNode_t* node, canNodeConfig_t* config);
+void canNodeInit (canNode_t* node, const canNodeConfig_t* config);
 
 /**
  * @brief Checks whether a received CAN message originated from a node. Resets the node's timeout deadline and message validity
