@@ -46,24 +46,14 @@ typedef struct
 /// @brief Driver for the Microchip 24LC32 I2C EEPROM.
 typedef struct
 {
+	/// @brief The device's configuration.
+	const mc24lc32Config_t* config;
+
 	/// @brief State of the device.
 	mc24lc32State_t state;
 
-	/// @brief The 7-bit I2C address of the device.
-	uint8_t addr;
-
-	/// @brief The IC2 bus of the device.
-	I2CDriver* i2c;
-
-	/// @brief The magic string used to validate the EEPROM's contents.
-	const char* magicString;
-
 	/// @brief Cached copy of the EEPROM's contents. Use for read / write operations.
 	uint8_t cache [MC24LC32_SIZE];
-
-	/// @brief The timeout interval for the device's acknowledgement polling. If the device does not send an acknowledgement
-	/// within this timeframe, it will be considered invalid.
-	sysinterval_t timeoutPeriod;
 } mc24lc32_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -74,7 +64,7 @@ typedef struct
  * @param config The configuration to use.
  * @return True if successful, false otherwise.
  */
-bool mc24lc32Init (mc24lc32_t* mc24lc32, mc24lc32Config_t* config);
+bool mc24lc32Init (mc24lc32_t* mc24lc32, const mc24lc32Config_t* config);
 
 /**
  * @brief Reads the contents of the devices memory into local cache.
@@ -97,7 +87,7 @@ bool mc24lc32Write (mc24lc32_t* mc24lc32);
  * @param data The array of data to write.
  * @param dataCount The size of the data array.
  * @return True if successful, false otherwise.
- * @note The write operation cannot cross a page boundary (32 byte).
+ * @note The write operation cannot cross a page boundary (multiples of 32 bytes).
  */
 bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data, uint8_t dataCount);
 
