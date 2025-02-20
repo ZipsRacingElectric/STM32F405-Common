@@ -1,9 +1,6 @@
 // Header
 #include "ecumaster_gps_v2.h"
 
-// Includes
-#include "debug.h"
-
 // Conversions ----------------------------------------------------------------------------------------------------------------
 
 // Coordinates
