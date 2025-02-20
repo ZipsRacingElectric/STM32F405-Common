@@ -18,12 +18,12 @@
 #define RESPONSE_IS_VALID(iv)				(((uint16_t) (iv))	<< 2)
 #define RESPONSE_DATA_COUNT(dc)				(((uint16_t) ((dc) - 1)) << 2)
 
-// Timeouts -------------------------------------------------------------------------------------------------------------------
+// Constants ------------------------------------------------------------------------------------------------------------------
 
+/// @brief The timeout for transmitting a response message.
 #define RESPONSE_TIMEOUT TIME_MS2I (100)
 
-// Global Constants -----------------------------------------------------------------------------------------------------------
-
+/// @brief The data to transmit in response to an invalid read address.
 static const uint32_t INVALID_READ_DATA = 0xFFFFFFFF;
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
@@ -52,66 +52,59 @@ bool mc24lc32HandleCanCommand (CANRxFrame* frame, CANDriver* driver, mc24lc32_t*
 	bool readNotWrite = COMMAND_READ_NOT_WRITE (frame->data16 [0]);
 	bool dataNotValidation = COMMAND_DATA_NOT_VALIDATION (frame->data16 [0]);
 
+	// Validation command
 	if (!dataNotValidation)
 	{
+		// Validation read
 		if (readNotWrite)
 		{
-			// Validation read
 			bool isValid = mc24lc32IsValid (eeprom);
 			transmitValidationResponse (driver, RESPONSE_TIMEOUT, responseId, isValid);
 			return false;
 		}
+
+		// Validation write
+		bool isValid = COMMAND_IS_VALID (frame->data16 [0]);
+		if (isValid)
+			mc24lc32Validate (eeprom);
 		else
-		{
-			// Validation write
-			bool isValid = COMMAND_IS_VALID (frame->data16 [0]);
+			mc34lc32Invalidate (eeprom);
 
-			// Validate / invalidate the EEPROM for next boot.
-			if (isValid)
-				mc24lc32Validate (eeprom);
-			else
-				mc34lc32Invalidate (eeprom);
-
-			mc24lc32Write (eeprom);
-			return true;
-		}
+		mc24lc32Write (eeprom);
+		return true;
 	}
-	else
+
+	// Data command
+	uint8_t dataCount = COMMAND_DATA_COUNT (frame->data16 [0]);
+	uint16_t address = frame->data16 [1];
+
+	// Data read
+	if (readNotWrite)
 	{
-		uint8_t dataCount = COMMAND_DATA_COUNT (frame->data16 [0]);
-		uint16_t address = frame->data16 [1];
-
-		if (readNotWrite)
+		// Readonly variable read
+		if (address >= MC24LC32_SIZE)
 		{
-			if (address >= MC24LC32_SIZE)
-			{
-				// Readonly variable read
-				void* data = NULL;
-				uint8_t dataCount;
-				if (readonlyCallback != NULL && readonlyCallback (address, &data, &dataCount))
-					transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, data, dataCount);
-				else
-					transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, &INVALID_READ_DATA, 4);
-
-				return false;
-			}
-			else
-			{
-				// Data read
-				uint8_t* data = eeprom->cache + address;
+			void* data = NULL;
+			uint8_t dataCount;
+			if (readonlyCallback != NULL && readonlyCallback (address, &data, &dataCount))
 				transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, data, dataCount);
-			}
+			else
+				transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, &INVALID_READ_DATA, 4);
 
+			return false;
 		}
-		else
-		{
-			// Data write
-			// Write the changes to the EEPROM.
-			uint8_t* data = frame->data8 + 4;
-			mc24lc32WriteThrough (eeprom, address, data, dataCount);
-			return true;
-		}
+
+		// Data read
+		uint8_t* data = eeprom->cache + address;
+		transmitDataResponse (driver, RESPONSE_TIMEOUT, responseId, address, data, dataCount);
+		return false;
 	}
+
+	// Data write
+	// Write the changes to the EEPROM.
+	uint8_t* data = frame->data8 + 4;
+	mc24lc32WriteThrough (eeprom, address, data, dataCount);
+	return true;
 }
 
 msg_t transmitDataResponse (CANDriver* driver, sysinterval_t timeout, uint16_t id, uint16_t address, const void* data, uint8_t dataCount)
