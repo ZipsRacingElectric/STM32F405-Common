@@ -145,7 +145,6 @@ bool mc24lc32Init (mc24lc32_t* mc24lc32, const mc24lc32Config_t *config)
 	// Setup the virtual method table
 	mc24lc32->readHandler	= mc24lc32Read;
 	mc24lc32->writeHandler	= mc24lc32Write;
-	mc24lc32->writeHook		= config->writeHook;
 
 	// Start the device in the ready state
 	mc24lc32->state = MC24LC32_STATE_READY;
@@ -182,8 +181,8 @@ bool mc24lc32Write (void* object, uint16_t address, const void* data, uint16_t d
 	i2cReleaseBus (mc24lc32->config->i2c);
 	#endif // I2C_USE_MUTUAL_EXCLUSION
 
-	if (result && mc24lc32->writeHook != NULL)
-		mc24lc32->writeHook (mc24lc32);
+	if (result && mc24lc32->config->dirtyHook != NULL)
+		mc24lc32->config->dirtyHook (mc24lc32);
 
 	return result;
 }

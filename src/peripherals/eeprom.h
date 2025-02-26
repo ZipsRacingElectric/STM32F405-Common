@@ -36,16 +36,9 @@ typedef bool (eepromWrite_t) (void* eeprom, uint16_t addr, const void* data, uin
  */
 typedef bool (eepromRead_t) (void* eeprom, uint16_t addr, void* data, uint16_t dataCount);
 
-/**
- * @brief Hook to be called after an EEPROM's memory has been written to.
- * @param eeprom The EEPROM that was modified.
- */
-typedef void (eepromWriteHook_t) (void* eeprom);
-
 #define EEPROM_FIELDS						\
 	eepromWrite_t*		writeHandler;		\
-	eepromRead_t*		readHandler;		\
-	eepromWriteHook_t*	writeHook
+	eepromRead_t*		readHandler
 
 /**
  * @brief Polymorphic base object representing an EEPROM.

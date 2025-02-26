@@ -23,6 +23,12 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
+/**
+ * @brief Callback for when a device's memory contents are modified.
+ * @param object The device that was modified ( @c mc24lc32_t type).
+ */
+typedef void (mc24lc32DirtyHook_t) (void* object);
+
 typedef enum
 {
 	MC24LC32_STATE_FAILED	= 0,
@@ -45,8 +51,8 @@ typedef struct
 	/// @brief The magic string used to validate the EEPROM's contents.
 	const char* magicString;
 
-	/// @brief Callback for when the device's data is modified.
-	eepromWriteHook_t* writeHook;
+	/// @brief Callback for when the device's memory is modified.
+	mc24lc32DirtyHook_t* dirtyHook;
 } mc24lc32Config_t;
 
 /**
