@@ -10,6 +10,9 @@
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
+// Includes
+#include "eeprom.h"
+
 // ChibiOS
 #include "hal.h"
 
@@ -30,22 +33,29 @@ typedef enum
 typedef struct
 {
 	/// @brief The 7-bit I2C address of the device.
-	uint8_t addr;
+	i2caddr_t addr;
 
 	/// @brief The IC2 bus of the device.
 	I2CDriver* i2c;
 
 	/// @brief The timeout interval for the device's acknowledgement polling. If the device does not send an acknowledgement
 	/// within this timeframe, it will be considered invalid.
-	sysinterval_t timeoutPeriod;
+	sysinterval_t timeout;
 
 	/// @brief The magic string used to validate the EEPROM's contents.
 	const char* magicString;
+
+	/// @brief Callback for when the device's data is modified.
+	eepromWriteHook_t* writeHook;
 } mc24lc32Config_t;
 
-/// @brief Driver for the Microchip 24LC32 I2C EEPROM.
+/**
+ * @brief Driver for the Microchip 24LC32 I2C EEPROM.
+ */
 typedef struct
 {
+	EEPROM_FIELDS;
+
 	/// @brief Cached copy of the EEPROM's contents. Use for read / write operations.
 	/// @note This field should always be first in its struct to ensure 4-byte alignment.
 	uint8_t cache [MC24LC32_SIZE];
@@ -68,29 +78,24 @@ typedef struct
 bool mc24lc32Init (mc24lc32_t* mc24lc32, const mc24lc32Config_t* config);
 
 /**
- * @brief Reads the contents of the devices memory into local cache.
+ * @brief Writes data through cache to the device.
+ * @param mc24lc32 The device to write to.
+ * @param address The byte address to write to.
+ * @param data The data to write.
+ * @param dataCount The number of bytes to write. Note that this cannot cross a page boundary (multiples of 32).
+ * @return True if successful, false otherwise.
+ */
+bool mc24lc32Write (void* mc24lc32, uint16_t address, const void* data, uint16_t dataCount);
+
+/**
+ * @brief Reads data from device cache.
  * @param mc24lc32 The device to read from.
- * @return True if successful and the memory is valid, false otherwise.
- */
-bool mc24lc32Read (mc24lc32_t* mc24lc32);
-
-/**
- * @brief Writes the local cached memory to the device.
- * @param mc24lc32 The device to write to.
+ * @param address The byte address to read from.
+ * @param data The buffer to write the data into.
+ * @param dataCount The number of bytes to read.
  * @return True if successful, false otherwise.
  */
-bool mc24lc32Write (mc24lc32_t* mc24lc32);
-
-/**
- * @brief Writes the specified data to the device.
- * @param mc24lc32 The device to write to.
- * @param address The address to write to.
- * @param data The array of data to write.
- * @param dataCount The size of the data array.
- * @return True if successful, false otherwise.
- * @note The write operation cannot cross a page boundary (multiples of 32 bytes).
- */
-bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data, uint8_t dataCount);
+bool mc24lc32Read (void* mc24lc32, uint16_t address, void* data, uint16_t dataCount);
 
 /**
  * @brief Checks whether the cached memory of the device is valid.
@@ -100,15 +105,15 @@ bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data
 bool mc24lc32IsValid (mc24lc32_t* mc24lc32);
 
 /**
- * @brief Validates the cached memory of the device. Changes will be committed on the next write.
+ * @brief Validates the cached memory of the device.
  * @param mc24lc32 The device to validate.
  */
-void mc24lc32Validate (mc24lc32_t* mc24lc32);
+bool mc24lc32Validate (mc24lc32_t* mc24lc32);
 
 /**
- * @brief Invalidates the cached memory of the device. Changes will be committed on the next write.
+ * @brief Invalidates the cached memory of the device.
  * @param mc24lc32 The device to invalidate.
  */
-void mc34lc32Invalidate (mc24lc32_t* mc24lc32);
+bool mc24lc32Invalidate (mc24lc32_t* mc24lc32);
 
 #endif // MC24LC32_H

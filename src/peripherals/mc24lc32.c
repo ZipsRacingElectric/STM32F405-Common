@@ -20,7 +20,7 @@
  * @param mc24lc32 The device to poll.
  * @return True if the device is available, false if a timeout or other failure occured.
  */
-bool mc24lc32AcknowledgePoll (mc24lc32_t* mc24lc32);
+static bool pollAck (mc24lc32_t* mc24lc32);
 
 /**
  * @brief Read a sequential section of memory (see 24LC32 datasheet, section 8.3).
@@ -30,7 +30,7 @@ bool mc24lc32AcknowledgePoll (mc24lc32_t* mc24lc32);
  * @param count The number of bytes to read.
  * @return True if successful, false otherwise.
  */
-bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t count);
+static bool sequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t count);
 
 /**
  * @brief Write into a page of memory (see 24LC32 datasheet, Section 6.2).
@@ -41,11 +41,18 @@ bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t co
  * @param count The number of bytes to read, cannot exceed @c PAGE_SIZE .
  * @return True if successful, false otherwise.
  */
-bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count);
+static bool pageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count);
+
+/**
+ * @brief Reads the contents of the devices memory into local cache.
+ * @param mc24lc32 The device to read from.
+ * @return True if successful and the memory is valid, false otherwise.
+ */
+static bool cacheRead (mc24lc32_t* mc24lc32);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool mc24lc32AcknowledgePoll (mc24lc32_t* mc24lc32)
+bool pollAck (mc24lc32_t* mc24lc32)
 {
 	// The 24LC32 will not ACK an I2C transaction unless it is available for read/write. This function uses this feature to
 	// poll the device periodically until it responds with an ACK.
@@ -57,8 +64,9 @@ bool mc24lc32AcknowledgePoll (mc24lc32_t* mc24lc32)
 	uint8_t tx [2] = { 0x00, 0x00 };
 
 	// Loop until the device responds or we time out.
-	while (chTimeDiffX (timeStart, chVTGetSystemTime ()) < mc24lc32->config->timeoutPeriod)
-		if (i2cMasterTransmit (mc24lc32->config->i2c, mc24lc32->config->addr, tx, 2, NULL, 0) == MSG_OK)
+	while (chTimeDiffX (timeStart, chVTGetSystemTime ()) < mc24lc32->config->timeout)
+		if (i2cMasterTransmitTimeout (mc24lc32->config->i2c, mc24lc32->config->addr, tx, sizeof (tx),
+			NULL, 0, mc24lc32->config->timeout) == MSG_OK)
 			return true;
 
 	// Timeout occurred, enter fail state.
@@ -66,10 +74,10 @@ bool mc24lc32AcknowledgePoll (mc24lc32_t* mc24lc32)
 	return false;
 }
 
-bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t count)
+bool sequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t count)
 {
 	// Check the device is available for transfer
-	if (!mc24lc32AcknowledgePoll (mc24lc32))
+	if (!pollAck (mc24lc32))
 		return false;
 
 	// Transactions starts with address (big-endian)
@@ -78,7 +86,8 @@ bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t co
 	// Receive into cache
 	uint8_t* rx = mc24lc32->cache + address;
 
-	if (i2cMasterTransmit (mc24lc32->config->i2c, mc24lc32->config->addr, tx, 2, rx, count) != MSG_OK)
+	if (i2cMasterTransmitTimeout (mc24lc32->config->i2c, mc24lc32->config->addr, tx, sizeof (tx),
+		rx, count, mc24lc32->config->timeout) != MSG_OK)
 	{
 		mc24lc32->state = MC24LC32_STATE_FAILED;
 		return false;
@@ -87,19 +96,20 @@ bool mc24lc32SequentialRead (mc24lc32_t* mc24lc32, uint16_t address, uint16_t co
 	return true;
 }
 
-bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
+bool pageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 {
 	// Check the device is available for transfer
-	if (!mc24lc32AcknowledgePoll (mc24lc32))
+	if (!pollAck (mc24lc32))
 		return false;
 
 	// Transactions starts with address (big-endian)
-	uint8_t tx [PAGE_SIZE + 2] = { (uint8_t) ((address) >> 8), (uint8_t) (address) };
+	uint8_t tx [PAGE_SIZE + sizeof (address)] = { (uint8_t) ((address) >> 8), (uint8_t) (address) };
 
 	// Max of 32 bytes of data follow
-	memcpy (tx + 2, mc24lc32->cache + address, count);
+	memcpy (tx + sizeof (address), mc24lc32->cache + address, count);
 
-	if (i2cMasterTransmit (mc24lc32->config->i2c, mc24lc32->config->addr, tx, count + 2, NULL, 0) != MSG_OK)
+	if (i2cMasterTransmitTimeout (mc24lc32->config->i2c, mc24lc32->config->addr, tx, count + sizeof (address),
+		NULL, 0, mc24lc32->config->timeout) != MSG_OK)
 	{
 		mc24lc32->state = MC24LC32_STATE_FAILED;
 		return false;
@@ -108,25 +118,13 @@ bool mc24lc32PageWrite (mc24lc32_t* mc24lc32, uint16_t address, uint8_t count)
 	return true;
 }
 
-bool mc24lc32Init (mc24lc32_t* mc24lc32, const mc24lc32Config_t *config)
-{
-	// Store the driver configuration
-	mc24lc32->config = config;
-
-	// Start the device in the ready state
-	mc24lc32->state = MC24LC32_STATE_READY;
-
-	// Read the EEPROM contents into memory
-	return mc24lc32Read (mc24lc32);
-}
-
-bool mc24lc32Read (mc24lc32_t* mc24lc32)
+bool cacheRead (mc24lc32_t* mc24lc32)
 {
 	// Acquire the bus
 	i2cAcquireBus (mc24lc32->config->i2c);
 
 	// Perform a sequential read starting at address 0
-	bool result = mc24lc32SequentialRead (mc24lc32, 0x00, MC24LC32_SIZE);
+	bool result = sequentialRead (mc24lc32, 0x00, MC24LC32_SIZE);
 
 	// Release the bus
 	i2cReleaseBus (mc24lc32->config->i2c);
@@ -139,39 +137,72 @@ bool mc24lc32Read (mc24lc32_t* mc24lc32)
 	return mc24lc32IsValid (mc24lc32);
 }
 
-bool mc24lc32Write (mc24lc32_t* mc24lc32)
+bool mc24lc32Init (mc24lc32_t* mc24lc32, const mc24lc32Config_t *config)
 {
-	// Acquire the bus
-	i2cAcquireBus (mc24lc32->config->i2c);
+	// Store the driver configuration
+	mc24lc32->config = config;
 
-	bool result = true;
-	for (uint16_t address = 0; address < MC24LC32_SIZE; address += PAGE_SIZE)
-	{
-		// If the transaction failed, exit early
-		result = mc24lc32PageWrite (mc24lc32, address, PAGE_SIZE);
-		if (!result)
-			break;
-	}
+	// Setup the virtual method table
+	mc24lc32->readHandler	= mc24lc32Read;
+	mc24lc32->writeHandler	= mc24lc32Write;
+	mc24lc32->writeHook		= config->writeHook;
 
-	// Release the bus
-	i2cReleaseBus (mc24lc32->config->i2c);
-	return result;
+	// Start the device in the ready state
+	mc24lc32->state = MC24LC32_STATE_READY;
+
+	// Read the EEPROM contents into memory
+	return cacheRead (mc24lc32);
 }
 
-bool mc24lc32WriteThrough (mc24lc32_t* mc24lc32, uint16_t address, uint8_t* data, uint8_t dataCount)
+bool mc24lc32Write (void* object, uint16_t address, const void* data, uint16_t dataCount)
 {
+	mc24lc32_t* mc24lc32 = (mc24lc32_t*) object;
+
+	// Memory boundary check
+	if (address + dataCount >= MC24LC32_SIZE)
+		return false;
+
+	// Page boundary check
+	if (address / PAGE_SIZE != (address + dataCount - 1) / PAGE_SIZE)
+		return false;
+
 	// Copy the data into cache
 	memcpy (mc24lc32->cache + address, data, dataCount);
 
 	// Acquire the bus
+	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cAcquireBus (mc24lc32->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
 
 	// Write the cached data to the device.
-	bool result = mc24lc32PageWrite (mc24lc32, address, dataCount);
+	bool result = pageWrite (mc24lc32, address, dataCount);
 
 	// Release the bus
+	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cReleaseBus (mc24lc32->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
+
+	if (result && mc24lc32->writeHook != NULL)
+		mc24lc32->writeHook (mc24lc32);
+
 	return result;
+}
+
+bool mc24lc32Read (void* object, uint16_t address, void* data, uint16_t dataCount)
+{
+	mc24lc32_t* mc24lc32 = (mc24lc32_t*) object;
+
+	// Memory boundary check
+	if (address + dataCount >= MC24LC32_SIZE)
+		return false;
+
+	// If a hardware error occurred, the cache is not valid.
+	if (mc24lc32->state == MC24LC32_STATE_FAILED)
+		return false;
+
+	// Copy the data from cache
+	memcpy (data, mc24lc32->cache + address, dataCount);
+	return true;
 }
 
 bool mc24lc32IsValid (mc24lc32_t* mc24lc32)
@@ -188,17 +219,22 @@ bool mc24lc32IsValid (mc24lc32_t* mc24lc32)
 	return true;
 }
 
-void mc24lc32Validate (mc24lc32_t* mc24lc32)
+bool mc24lc32Validate (mc24lc32_t* mc24lc32)
 {
-	// Copy the magic string into the beginning of memory (including terminator)
+	// Write the magic string into the beginning of memory (including terminator)
 	uint8_t stringSize = strlen (mc24lc32->config->magicString) + 1;
-	memcpy (mc24lc32->cache, mc24lc32->config->magicString, stringSize);
+	return mc24lc32Write (mc24lc32, 0x000, mc24lc32->config->magicString, stringSize);
 }
 
-void mc34lc32Invalidate (mc24lc32_t* mc24lc32)
+bool mc24lc32Invalidate (mc24lc32_t* mc24lc32)
 {
-	// Write all 1's over the magic string
+	uint8_t data = 0xFF;
 	uint8_t stringSize = strlen (mc24lc32->config->magicString) + 1;
+
+	// Write all 1's over the magic string
+	bool result = true;
 	for (uint8_t index = 0; index < stringSize; ++index)
-		mc24lc32->cache [index] = 0xFF;
+		result &= mc24lc32Write (mc24lc32, index, &data, sizeof (data));
+
+	return result;
 }

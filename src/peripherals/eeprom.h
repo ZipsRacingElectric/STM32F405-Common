@@ -24,7 +24,7 @@
  * @param dataCount The amount of data to write.
  * @return True if successful, false otherwise.
  */
-typedef bool (eepromWrite_t) (void* eeprom, uint16_t addr, void* data, uint16_t dataCount);
+typedef bool (eepromWrite_t) (void* eeprom, uint16_t addr, const void* data, uint16_t dataCount);
 
 /**
  * @brief Reads a block of memory from an EEPROM.
@@ -59,13 +59,13 @@ typedef struct
 typedef struct
 {
 	/// @brief The array of EEPROM's to aggregate into a single memory map.
-	const eeprom_t** eeproms;
+	eeprom_t** eeproms;
 
 	/// @brief The base address to map each EEPROM's memory to.
-	const uint16_t* addrs;
+	uint16_t* addrs;
 
 	/// @brief The size of each EEPROM's map.
-	const uint16_t* sizes;
+	uint16_t* sizes;
 
 	/// @brief The number of EEPROMs in the @c eeproms array.
 	uint16_t count;
@@ -74,7 +74,7 @@ typedef struct
 typedef struct
 {
 	EEPROM_FIELDS;
-	virtualEepromConfig_t* config;
+	const virtualEepromConfig_t* config;
 } virtualEeprom_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
