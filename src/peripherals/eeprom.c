@@ -3,7 +3,7 @@
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
-bool virtualEepromWrite (void* object, uint16_t addr, void* data, uint16_t dataCount);
+bool virtualEepromWrite (void* object, uint16_t addr, const void* data, uint16_t dataCount);
 
 bool virtualEepromRead (void* object, uint16_t addr, void* data, uint16_t dataCount);
 
@@ -11,11 +11,15 @@ bool virtualEepromRead (void* object, uint16_t addr, void* data, uint16_t dataCo
 
 void virtualEepromInit (virtualEeprom_t* eeprom, const virtualEepromConfig_t* config)
 {
+	eeprom->writeHandler	= virtualEepromWrite;
+	eeprom->readHandler		= virtualEepromRead;
 	eeprom->config = config;
 }
 
-bool virtualEepromWrite (void* object, uint16_t addr, void* data, uint16_t dataCount)
+bool virtualEepromWrite (void* object, uint16_t addr, const void* data, uint16_t dataCount)
 {
+	// TODO(Barach): No boundary check.
+
 	virtualEeprom_t* eeprom = (virtualEeprom_t*) object;
 
 	// Traverse each EEPROM and check if the write address falls within its mapped memory.
@@ -25,7 +29,7 @@ bool virtualEepromWrite (void* object, uint16_t addr, void* data, uint16_t dataC
 		uint16_t addrMax = addrMin + eeprom->config->sizes [index];
 
 		if (addr >= addrMin && addr < addrMax)
-			return virtualEepromWrite (eeprom->config->eeproms + index, addr - addrMin, data, dataCount);
+			return eeprom->config->eeproms [index]->writeHandler (eeprom->config->eeproms [index], addr - addrMin, data, dataCount);
 	}
 
 	// Failed
@@ -34,6 +38,8 @@ bool virtualEepromWrite (void* object, uint16_t addr, void* data, uint16_t dataC
 
 bool virtualEepromRead (void* object, uint16_t addr, void* data, uint16_t dataCount)
 {
+	// TODO(Barach): No boundary check.
+
 	virtualEeprom_t* eeprom = (virtualEeprom_t*) object;
 
 	// Traverse each EEPROM and check if the read address falls within its mapped memory.
@@ -43,7 +49,8 @@ bool virtualEepromRead (void* object, uint16_t addr, void* data, uint16_t dataCo
 		uint16_t addrMax = addrMin + eeprom->config->sizes [index];
 
 		if (addr >= addrMin && addr < addrMax)
-			return virtualEepromRead (eeprom->config->eeproms + index, addr - addrMin, data, dataCount);
+			return eeprom->config->eeproms [index]->readHandler (eeprom->config->eeproms [index], addr - addrMin,
+			data, dataCount);
 	}
 
 	// Failed

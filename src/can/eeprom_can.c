@@ -45,7 +45,7 @@ void eepromHandleCanCommand (CANRxFrame* command, CANDriver* driver, eeprom_t* e
 	else
 	{
 		// Write operation
-		result = eeprom->writeHandler (eeprom, address, response.data8 + 2, count);
+		result = eeprom->writeHandler (eeprom, address, command->data8 + 2, count);
 		memcpy (response.data8 + 2, command->data8 + 2, count);
 	}
 
