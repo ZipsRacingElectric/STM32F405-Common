@@ -165,6 +165,24 @@ bool mc24lc32Write (void* object, uint16_t address, const void* data, uint16_t d
 	if (address / PAGE_SIZE != (address + dataCount - 1) / PAGE_SIZE)
 		return false;
 
+	// If writing to address 0, interpret it as a state command.
+	if (address == 0x000 && dataCount == sizeof (mc24lc32State_t))
+	{
+		// Based on the state that was written, validate / invalidate the device.
+		switch (*((mc24lc32State_t*) data))
+		{
+		case MC24LC32_STATE_FAILED:
+		case MC24LC32_STATE_INVALID:
+			mc24lc32Invalidate (mc24lc32);
+			return true;
+		case MC24LC32_STATE_READY:
+			mc24lc32Validate (mc24lc32);
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	// Copy the data into cache
 	memcpy (mc24lc32->cache + address, data, dataCount);
 
@@ -199,6 +217,13 @@ bool mc24lc32Read (void* object, uint16_t address, void* data, uint16_t dataCoun
 	if (mc24lc32->state == MC24LC32_STATE_FAILED)
 		return false;
 
+	// If reading from address 0, return the state rather than the magic string.
+	if (address == 0x000 && dataCount == sizeof (mc24lc32->state))
+	{
+		memcpy (data, &mc24lc32->state, sizeof (mc24lc32->state));
+		return true;
+	}
+
 	// Copy the data from cache
 	memcpy (data, mc24lc32->cache + address, dataCount);
 	return true;
@@ -222,18 +247,51 @@ bool mc24lc32Validate (mc24lc32_t* mc24lc32)
 {
 	// Write the magic string into the beginning of memory (including terminator)
 	uint8_t stringSize = strlen (mc24lc32->config->magicString) + 1;
-	return mc24lc32Write (mc24lc32, 0x000, mc24lc32->config->magicString, stringSize);
+	memcpy (mc24lc32->cache, mc24lc32->config->magicString, stringSize);
+
+	// Acquire the bus
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cAcquireBus (mc24lc32->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
+
+	// Write the cached data to the device.
+	bool result = pageWrite (mc24lc32, 0x000, stringSize);
+
+	// Release the bus
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cReleaseBus (mc24lc32->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
+
+	// Update the device's state.
+	if (mc24lc32->state != MC24LC32_STATE_FAILED)
+		mc24lc32->state = MC24LC32_STATE_READY;
+
+	return result;
 }
 
 bool mc24lc32Invalidate (mc24lc32_t* mc24lc32)
 {
-	uint8_t data = 0xFF;
-	uint8_t stringSize = strlen (mc24lc32->config->magicString) + 1;
-
 	// Write all 1's over the magic string
-	bool result = true;
+	uint8_t stringSize = strlen (mc24lc32->config->magicString) + 1;
 	for (uint8_t index = 0; index < stringSize; ++index)
-		result &= mc24lc32Write (mc24lc32, index, &data, sizeof (data));
+		*(uint8_t*) (mc24lc32->cache + index) = 0xFF;
+
+	// Acquire the bus
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cAcquireBus (mc24lc32->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
+
+	// Write the cached data to the device.
+	bool result = pageWrite (mc24lc32, 0x000, stringSize);
+
+	// Release the bus
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cReleaseBus (mc24lc32->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
+
+	// Update the device's state.
+	if (mc24lc32->state != MC24LC32_STATE_FAILED)
+		mc24lc32->state = MC24LC32_STATE_INVALID;
 
 	return result;
 }
