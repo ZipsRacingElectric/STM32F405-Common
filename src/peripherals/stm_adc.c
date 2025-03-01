@@ -1,10 +1,10 @@
 // Header
-#include "analog.h"
+#include "stm_adc.h"
 
-bool analogInit (analog_t* analog, const analogConfig_t* config)
+bool stmAdcInit (stmAdc_t* adc, const stmAdcConfig_t* config)
 {
 	// Store the configuration.
-	analog->config = config;
+	adc->config = config;
 
 	// Compute the conversion group for the ADC.
 	ADCConversionGroup group =
@@ -50,32 +50,37 @@ bool analogInit (analog_t* analog, const analogConfig_t* config)
 							(ADC_SQR3_SQ2_N (config->channels [1])) |			// Sample 2 channel index.
 							(ADC_SQR3_SQ1_N (config->channels [0]))				// Sample 1 channel index.
 	};
-	analog->group = group;
+	adc->group = group;
 
 	// Start the ADC with default configuration.
-	return adcStart (analog->config->driver, NULL) == MSG_OK;
+	return adcStart (adc->config->driver, NULL) == MSG_OK;
 }
 
-bool analogSample (analog_t* analog)
+bool stmAdcSample (stmAdc_t* adc)
 {
 	// If the API is enabled, lock the ADC's mutex.
 	#if ADC_USE_MUTUAL_EXCLUSION
-	adcAcquireBus (analog->config->driver);
+	adcAcquireBus (adc->config->driver);
 	#endif // ADC_USE_MUTUAL_EXCLUSION
 
 	// Sample the ADC.
-	if (adcConvert (analog->config->driver, &analog->group, analog->buffer, 1) != MSG_OK)
+	if (adcConvert (adc->config->driver, &adc->group, adc->buffer, 1) != MSG_OK)
+	{
+		// If the conversion failed, set all sensors to the fail state.
+		for (adc_channels_num_t index = 0; index < adc->config->channelCount; ++index)
+			adc->config->sensors [index]->state = ANALOG_SENSOR_FAILED;
+
 		return false;
+	}
 
 	// If the API is enabled, unlock the ADC's mutex.
 	#if ADC_USE_MUTUAL_EXCLUSION
-	adcReleaseBus (analog->config->driver);
+	adcReleaseBus (adc->config->driver);
 	#endif // ADC_USE_MUTUAL_EXCLUSION
 
 	// Call the conversion event handlers.
-	for (adc_channels_num_t index = 0; index < analog->config->channelCount; ++index)
-		if (analog->config->handlers [index] != NULL)
-			analog->config->handlers [index] (analog->config->objects [index], analog->buffer [index]);
+	for (adc_channels_num_t index = 0; index < adc->config->channelCount; ++index)
+		adc->config->sensors [index]->callback (adc->config->sensors [index], adc->buffer [index]);
 
 	return true;
 }
