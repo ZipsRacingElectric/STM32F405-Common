@@ -44,7 +44,7 @@ void callback (void* object, uint16_t sample)
 	sensor->sample = sample;
 
 	// If the peripheral has failed or the config is invalid, don't check anything else.
-	if (sensor->state == ANALOG_SENSOR_CONFIG_INVALID)
+	if (sensor->state == ANALOG_SENSOR_CONFIG_INVALID || sensor->state == ANALOG_SENSOR_FAILED)
 		return;
 
 	// Check the sample is in the valid range
