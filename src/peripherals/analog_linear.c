@@ -11,7 +11,6 @@
  * @note This function uses a @c void* for the object reference as to make the signature usable by callbacks.
  * @param object The sensor to update (must be a @c linearSensor_t* ).
  * @param sample The read sample.
- * @param valid Indicates the validity of the sample.
  */
 static void callback (void* object, uint16_t sample);
 
