@@ -12,7 +12,7 @@
  * @param object The thermistor to update (must be a @c thermistorPulldown_t* ).
  * @param sample The read sample.
  */
-static void callback (void* object, uint16_t sample);
+static void callback (void* object, float sample);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ bool thermistorPulldownInit (thermistorPulldown_t* thermistor, const thermistorP
 	return thermistor->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void callback (void* object, uint16_t sample)
+void callback (void* object, float sample)
 {
 	thermistorPulldown_t* thermistor = (thermistorPulldown_t*) object;
 

@@ -12,7 +12,7 @@
  * @param object The sensor to update (must be a @c linearSensor_t* ).
  * @param sample The read sample.
  */
-static void callback (void* object, uint16_t sample);
+static void callback (void* object, float sample);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ bool linearSensorInit (linearSensor_t* sensor, linearSensorConfig_t* config)
 	return sensor->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void callback (void* object, uint16_t sample)
+void callback (void* object, float sample)
 {
 	linearSensor_t* sensor = (linearSensor_t*) object;
 

@@ -35,7 +35,7 @@ typedef struct
 {
 	ANALOG_SENSOR_FIELDS;
 	linearSensorConfig_t*	config;
-	uint16_t				sample;
+	float					sample;
 	float					value;
 } linearSensor_t;
 
