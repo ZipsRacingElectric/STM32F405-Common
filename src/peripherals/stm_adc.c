@@ -78,9 +78,10 @@ bool stmAdcSample (stmAdc_t* adc)
 	adcReleaseBus (adc->config->driver);
 	#endif // ADC_USE_MUTUAL_EXCLUSION
 
+	// TODO(Barach): VDD
 	// Call the conversion event handlers.
 	for (adc_channels_num_t index = 0; index < adc->config->channelCount; ++index)
-		adc->config->sensors [index]->callback (adc->config->sensors [index], adc->buffer [index]);
+		adc->config->sensors [index]->callback (adc->config->sensors [index], adc->buffer [index], 4095);
 
 	return true;
 }

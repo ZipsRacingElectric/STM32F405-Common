@@ -56,9 +56,6 @@ typedef struct
 	/// @brief The resistance of the circuit's pullup resistor, in Ohms.
 	float resistancePullup;
 
-	/// @brief The ADC sample of VDD (max sample, ex. 4096).
-	uint16_t sampleVdd;
-
 	/// @brief The minimum plausible temperature, used to detect open-circuit faults.
 	float temperatureMin;
 
@@ -76,6 +73,8 @@ typedef struct
 	float sample;
 	float resistance;
 	float temperature;
+	bool undertemperatureFault;
+	bool overtemperatureFault;
 } thermistorPulldown_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

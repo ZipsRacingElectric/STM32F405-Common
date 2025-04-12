@@ -11,8 +11,9 @@
  * @note This function uses a @c void* for the object reference as to make the signature usable by callbacks.
  * @param object The thermistor to update (must be a @c thermistorPulldown_t* ).
  * @param sample The read sample.
+ * @param sampleVdd The sample of the analog supply voltage.
  */
-static void callback (void* object, float sample);
+static void callback (void* object, uint16_t sample, uint16_t sampleVdd);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -35,7 +36,7 @@ bool thermistorPulldownInit (thermistorPulldown_t* thermistor, const thermistorP
 	return thermistor->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void callback (void* object, float sample)
+void callback (void* object, uint16_t sample, uint16_t sampleVdd)
 {
 	thermistorPulldown_t* thermistor = (thermistorPulldown_t*) object;
 
@@ -46,8 +47,9 @@ void callback (void* object, float sample)
 	if (thermistor->state == ANALOG_SENSOR_CONFIG_INVALID || thermistor->state == ANALOG_SENSOR_FAILED)
 		return;
 
+	// TODO(Barach): How should this work?
 	// Check the sample is in the valid range
-	if (sample >= thermistor->config->sampleVdd)
+	if (sample >= sampleVdd)
 	{
 		thermistor->state = ANALOG_SENSOR_SAMPLE_INVALID;
 		thermistor->temperature = 0;
@@ -67,9 +69,13 @@ void callback (void* object, float sample)
 	//                   = X_ADC * R_Pullup / (X_VDD * (1 - X_ADC/X_VDD))
 	//                   = X_ADC * R_Pullup / (X_VDD - X_ADC)
 
-	thermistor->resistance = sample * thermistor->config->resistancePullup / (thermistor->config->sampleVdd - sample);
+	thermistor->resistance = sample * thermistor->config->resistancePullup / (sampleVdd - sample);
 
 	thermistor->temperature = steinhartHartTemperature (thermistor->resistance, thermistor->config->resistanceReference,
 		thermistor->config->steinhartHartA, thermistor->config->steinhartHartB, thermistor->config->steinhartHartC,
 		thermistor->config->steinhartHartD);
+
+	// TODO(Barach): Handling?
+	thermistor->overtemperatureFault = thermistor->temperature > thermistor->config->temperatureMax;
+	thermistor->undertemperatureFault = thermistor->temperature < thermistor->config->temperatureMin;
 }
