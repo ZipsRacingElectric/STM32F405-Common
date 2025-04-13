@@ -47,12 +47,19 @@ void callback (void* object, uint16_t sample, uint16_t sampleVdd)
 	if (thermistor->state == ANALOG_SENSOR_CONFIG_INVALID || thermistor->state == ANALOG_SENSOR_FAILED)
 		return;
 
-	// TODO(Barach): How should this work?
 	// Check the sample is in the valid range
 	if (sample >= sampleVdd)
 	{
 		thermistor->state = ANALOG_SENSOR_SAMPLE_INVALID;
-		thermistor->temperature = 0;
+		thermistor->undertemperatureFault = true;
+		thermistor->temperature = thermistor->config->temperatureMin;
+		return;
+	}
+	else if (sample == 0)
+	{
+		thermistor->sample = ANALOG_SENSOR_SAMPLE_INVALID;
+		thermistor->overtemperatureFault = true;
+		thermistor->temperature = thermistor->config->temperatureMax;
 		return;
 	}
 
@@ -75,7 +82,6 @@ void callback (void* object, uint16_t sample, uint16_t sampleVdd)
 		thermistor->config->steinhartHartA, thermistor->config->steinhartHartB, thermistor->config->steinhartHartC,
 		thermistor->config->steinhartHartD);
 
-	// TODO(Barach): Handling?
 	thermistor->overtemperatureFault = thermistor->temperature > thermistor->config->temperatureMax;
 	thermistor->undertemperatureFault = thermistor->temperature < thermistor->config->temperatureMin;
 }

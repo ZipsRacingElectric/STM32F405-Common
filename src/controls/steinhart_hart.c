@@ -7,5 +7,5 @@
 float steinhartHartTemperature (float measuredResistance, float referenceResistance, float a, float b, float c, float d)
 {
 	float lnR = logf (measuredResistance / referenceResistance);
-	return 1.0f / (a + b * lnR + c * lnR * lnR + d * lnR * lnR * lnR);
+	return 1.0f / (a + b * lnR + c * lnR * lnR + d * lnR * lnR * lnR) - 273.15f;
 }
