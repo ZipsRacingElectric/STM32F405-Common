@@ -34,9 +34,9 @@ typedef struct
 typedef struct
 {
 	ANALOG_SENSOR_FIELDS;
-	linearSensorConfig_t*	config;
-	float					sample;
-	float					value;
+	const linearSensorConfig_t*	config;
+	float sample;
+	float value;
 } linearSensor_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -47,6 +47,6 @@ typedef struct
  * @param config The configuration to use.
  * @return True if successful, false otherwise.
  */
-bool linearSensorInit (linearSensor_t* sensor, linearSensorConfig_t* config);
+bool linearSensorInit (linearSensor_t* sensor, const linearSensorConfig_t* config);
 
 #endif // ANALOG_LINEAR_H

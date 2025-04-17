@@ -17,7 +17,7 @@ static void callback (void* object, uint16_t sample, uint16_t sampleVdd);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool linearSensorInit (linearSensor_t* sensor, linearSensorConfig_t* config)
+bool linearSensorInit (linearSensor_t* sensor, const linearSensorConfig_t* config)
 {
 	// Store the configuration
 	sensor->config = config;
