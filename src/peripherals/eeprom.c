@@ -9,6 +9,12 @@ bool virtualEepromRead (void* object, uint16_t addr, void* data, uint16_t dataCo
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
+void eepromInit (eeprom_t* eeprom, eepromWrite_t* writeHandler, eepromRead_t* readHandler)
+{
+	eeprom->writeHandler	= writeHandler;
+	eeprom->readHandler		= readHandler;
+}
+
 void virtualEepromInit (virtualEeprom_t* eeprom, const virtualEepromConfig_t* config)
 {
 	eeprom->writeHandler	= virtualEepromWrite;
@@ -23,8 +29,8 @@ bool virtualEepromWrite (void* object, uint16_t addr, const void* data, uint16_t
 	// Traverse each EEPROM and check if the write address falls within its mapped memory.
 	for (uint16_t index = 0; index < eeprom->config->count; ++index)
 	{
-		uint16_t addrMin = eeprom->config->addrs [index];
-		uint16_t addrMax = addrMin + eeprom->config->sizes [index];
+		uint16_t addrMin = eeprom->config->entries [index].addr;
+		uint16_t addrMax = addrMin + eeprom->config->entries [index].size;
 
 		// Find the correct EEPROM, skip others.
 		if (addr < addrMin || addr >= addrMax)
@@ -35,8 +41,8 @@ bool virtualEepromWrite (void* object, uint16_t addr, const void* data, uint16_t
 			return false;
 
 		// Pass the operation to the EEPROM's handler.
-		return eeprom->config->eeproms [index]->writeHandler (
-			eeprom->config->eeproms [index], addr - addrMin, data, dataCount);
+		return eeprom->config->entries [index].eeprom->writeHandler (
+			eeprom->config->entries [index].eeprom, addr - addrMin, data, dataCount);
 	}
 
 	// Failed
@@ -50,8 +56,8 @@ bool virtualEepromRead (void* object, uint16_t addr, void* data, uint16_t dataCo
 	// Traverse each EEPROM and check if the read address falls within its mapped memory.
 	for (uint16_t index = 0; index < eeprom->config->count; ++index)
 	{
-		uint16_t addrMin = eeprom->config->addrs [index];
-		uint16_t addrMax = addrMin + eeprom->config->sizes [index];
+		uint16_t addrMin = eeprom->config->entries [index].addr;
+		uint16_t addrMax = addrMin + eeprom->config->entries [index].size;
 
 		// Find the correct EEPROM, skip others.
 		if (addr < addrMin || addr >= addrMax)
@@ -62,8 +68,8 @@ bool virtualEepromRead (void* object, uint16_t addr, void* data, uint16_t dataCo
 			return false;
 
 		// Pass the operation to the EEPROM's handler.
-		return eeprom->config->eeproms [index]->readHandler (
-			eeprom->config->eeproms [index], addr - addrMin, data, dataCount);
+		return eeprom->config->entries [index].eeprom->readHandler (
+			eeprom->config->entries [index].eeprom, addr - addrMin, data, dataCount);
 	}
 
 	// Failed

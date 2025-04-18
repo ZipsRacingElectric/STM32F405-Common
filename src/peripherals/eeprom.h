@@ -6,7 +6,9 @@
 // Author: Cole Barach
 // Date Created: 2025.02.25
 //
-// Description: Standard interface for EEPROM devices.
+// Description: Standard interface for EEPROM devices. This module defines a polymorphic interface for EEPROM-implementing
+//   objects to inherit. This also defines a 'virtual' EEPROM that allows multiple EEPROM objects to be aggregated into a
+//   single memory map.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -49,21 +51,32 @@ typedef struct
 	EEPROM_FIELDS;
 } eeprom_t;
 
+/**
+ * @brief Entry in a @c virtualEeprom_t device.
+ */
 typedef struct
 {
-	/// @brief The array of EEPROM's to aggregate into a single memory map.
-	eeprom_t** eeproms;
+	eeprom_t* eeprom;
+	uint16_t addr;
+	uint16_t size;
+} virtualEepromEntry_t;
 
-	/// @brief The base address to map each EEPROM's memory to.
-	uint16_t* addrs;
-
-	/// @brief The size of each EEPROM's map.
-	uint16_t* sizes;
-
-	/// @brief The number of EEPROMs in the @c eeproms array.
+/**
+ * @brief Configuration for the @c virtualEeprom_t object.
+ */
+typedef struct
+{
+	/// @brief The number of EEPROMs in the @c entries array.
 	uint16_t count;
+
+	/// @brief The array of EEPROMs to map to this device's memory.
+	virtualEepromEntry_t entries [];
 } virtualEepromConfig_t;
 
+/**
+ * @brief Object mapping multiple EEPROM's memory to a single object. See the @c eeprom_can module for a case where this would
+ * be useful.
+ */
 typedef struct
 {
 	EEPROM_FIELDS;
@@ -72,6 +85,21 @@ typedef struct
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
+/**
+ * @brief Initializes a base EEPROM object using the specified handlers.
+ * @note This is only to be used on objects that are direct instances of @c eeprom_t . Derived objects will provide their own
+ * initializers that must be used instead.
+ * @param eeprom The base EEPROM to initialize.
+ * @param writeHandler The handler to use for write operations.
+ * @param readHandler The handler to use for read operations.
+ */
+void eepromInit (eeprom_t* eeprom, eepromWrite_t* writeHandler, eepromRead_t* readHandler);
+
+/**
+ * @brief Initializes a virtual EEPROM using the specified configuration.
+ * @param eeprom The virtual EEPROM to initialize.
+ * @param config The configuration to use.
+ */
 void virtualEepromInit (virtualEeprom_t* eeprom, const virtualEepromConfig_t* config);
 
 #endif // EEPROM_H
