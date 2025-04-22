@@ -1,8 +1,6 @@
 #ifndef STEINHART_HART_H
 #define STEINHART_HART_H
 
-// TODO(Barach): This version or only 3 coefficients?
-
 /**
  * @brief Converts a thermistor's resistance to a temperature based on the thermistor's Steinhart-Hart coefficients.
  * @note The version of the Steinhart-Hart equation implemented uses 4 coefficients, taking the form:
