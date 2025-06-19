@@ -10,7 +10,6 @@
 #define WORD_TO_TORQUE(word)	(((int16_t) (word)) * TORQUE_FACTOR)
 
 // Speed values (unit RPM)
-// TODO(Barach): Are you sure this is correct? It looked to be proportional in testing.
 #define SPEED_FACTOR			0.00001f
 #define WORD_TO_SPEED(word)		(SPEED_FACTOR / ((int32_t) (word)))
 
@@ -80,11 +79,12 @@ void amkInit (amkInverter_t* amk, const amkInverterConfig_t* config)
 {
 	// Store the configuration
 	amk->baseId = config->baseId;
+	amk->bridgeDriver = config->bridgeDriver;
 
 	// Initialize the node
 	canNodeConfig_t canConfig =
 	{
-		.driver			= config->driver,
+		.driver			= config->mainDriver,
 		.receiveHandler	= amkReceiveHandler,
 		.timeoutHandler	= NULL,
 		.timeoutPeriod	= config->timeoutPeriod,
@@ -101,7 +101,7 @@ amkInverterState_t amkGetState (amkInverter_t* amk)
 		return AMK_STATE_ERROR;
 	if (amk->quitInverter)
 		return AMK_STATE_READY_ENERGIZED;
-	if (amk->quitDcOn)
+	if (amk->dcBusVoltage > 430) // TODO(Barach): Precharge complete signal?
 		return AMK_STATE_READY_HIGH_VOLTAGE;
 
 	return AMK_STATE_READY_LOW_VOLTAGE;
@@ -182,6 +182,10 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 	if (!energized)
 		return amkSendEnergizationRequest (amk, true, timeout);
 
+	// Disable regen until interpolation is figured out.
+	if (torqueRequest < 0)
+		torqueRequest = 0;
+
 	// Otherwise, clamp and send the request.
 	amkClampTorqueRequest (&torqueRequest);
 	return amkSendMotorRequest (amk, true, true, true, false, torqueRequest, torqueLimitPositive, torqueLimitNegative,
@@ -190,14 +194,22 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 
 msg_t amkSendErrorResetRequest (amkInverter_t* amk, sysinterval_t timeout)
 {
-	// Preserve the current settings.
 	canNodeLock ((canNode_t*) amk);
-	bool inverterEnabled	= amk->state == CAN_NODE_VALID && amk->inverterOn;
-	bool dcEnabled			= amk->state == CAN_NODE_VALID && amk->dcOn;
-	bool driverEnabled		= inverterEnabled && dcEnabled;
+
+	// If no error is present, exit early.
+	if (!amk->error && amk->systemReady)
+	{
+		canNodeUnlock ((canNode_t*) amk);
+		return MSG_OK;
+	}
+
+	// Assume the inverter requires re-energization.
+	amk->inverterOn		= false;
+	amk->quitInverter	= false;
 	canNodeUnlock ((canNode_t*) amk);
 
-	return amkSendMotorRequest (amk, inverterEnabled, dcEnabled, driverEnabled, true, 0, 0, 0, timeout);
+	amkSendMotorRequest (amk, false, false, false, true, 0, 0, 0, timeout);
+	return amkSendMotorRequest (amk, true, false, true, false, 0, 0, 0, timeout);
 }
 
 msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, bool errorReset,
@@ -241,6 +253,10 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 	msg_t result = canTransmitTimeout (amk->driver, CAN_ANY_MAILBOX, &transmit, timeout);
 	if (result != MSG_OK)
 		canFaultCallback (result);
+
+	// Relay to the bridge driver.
+	canTransmitTimeout (amk->bridgeDriver, CAN_ANY_MAILBOX, &transmit, timeout);
+
 	return result;
 }
 

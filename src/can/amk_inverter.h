@@ -33,7 +33,8 @@
 
 typedef struct
 {
-	CANDriver*		driver;
+	CANDriver*		mainDriver;
+	CANDriver*		bridgeDriver;
 	sysinterval_t	timeoutPeriod;
 	uint16_t		baseId;
 } amkInverterConfig_t;
@@ -64,6 +65,8 @@ typedef struct
 {
 	CAN_NODE_FIELDS;
 	uint16_t baseId;
+
+	CANDriver* bridgeDriver;
 
 	/// @brief Indicates whether the inverter is ready and error-free.
 	bool systemReady;
