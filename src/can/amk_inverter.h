@@ -190,10 +190,11 @@ float amksGetCumulativePower (amkInverter_t* amks, uint32_t count);
  * @brief Sends a request to energize / de-energize the inverter.
  * @param amk The inverter to request.
  * @param energized True if the inverter should be energized, false if de-energized.
+ * @param errorReset Indicates that if an error is present, a reset request should be delivered in place of this message.
  * @param timeout The interval to timeout after.
  * @return The result of the CAN operation.
  */
-msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, sysinterval_t timeout);
+msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, bool errorReset, sysinterval_t timeout);
 
 /**
  * @brief Sends a request for a specific amount of torque to be generated. Will request to energize the inverter if it is not
@@ -202,11 +203,12 @@ msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, sysinterva
  * @param torqueRequest The amount of torque to request, in Nm.
  * @param torqueLimitPositive The upper torque limit to apply, in Nm.
  * @param torqueLimitNegative The lower torque limit to apply, in Nm.
+ * @param errorReset Indicates that if an error is present, a reset request should be delivered in place of this message.
  * @param timeout The interval to timeout after.
  * @return The result of the CAN operation.
  */
 msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqueLimitPositive, float torqueLimitNegative,
-	sysinterval_t timeout);
+	bool errorReset, sysinterval_t timeout);
 
 /**
  * @brief Sends a request to clear all system errors, if any are present.

@@ -165,22 +165,36 @@ float amksGetCumulativePower (amkInverter_t* amks, uint32_t count)
 
 // Transmit Functions ---------------------------------------------------------------------------------------------------------
 
-msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, sysinterval_t timeout)
+msg_t amkSendEnergizationRequest (amkInverter_t* amk, bool energized, bool errorReset, sysinterval_t timeout)
 {
+	canNodeLock ((canNode_t*) amk);
+	bool error = amk->error;
+	canNodeUnlock ((canNode_t*) amk);
+
+	// If an error is present and automatic reset is specified, send the reset request.
+	if (errorReset && error)
+		return amkSendErrorResetRequest (amk, timeout);
+
 	// In order to energize, all setpoints must be set to 0.
 	return amkSendMotorRequest (amk, energized, true, energized, false, 0, 0, 0, timeout);
 }
 
-msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqueLimitPositive, float torqueLimitNegative,
+msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqueLimitPositive, float torqueLimitNegative, bool errorReset,
 	sysinterval_t timeout)
 {
 	canNodeLock ((canNode_t*) amk);
 	bool energized = amk->state == CAN_NODE_VALID && amk->quitInverter;
+	bool error = amk->error;
 	canNodeUnlock ((canNode_t*) amk);
 
+	// If an error is present and automatic reset is specified, send the reset request.
+	if (errorReset && error)
+		return amkSendErrorResetRequest (amk, timeout);
+
+	// TODO(Barach): Revert
 	// If the inverter isn't energized, send the request to energize.
 	if (!energized)
-		return amkSendEnergizationRequest (amk, true, timeout);
+		return amkSendEnergizationRequest (amk, true, errorReset, timeout);
 
 	// Disable regen until interpolation is figured out.
 	if (torqueRequest < 0)
@@ -208,8 +222,7 @@ msg_t amkSendErrorResetRequest (amkInverter_t* amk, sysinterval_t timeout)
 	amk->quitInverter	= false;
 	canNodeUnlock ((canNode_t*) amk);
 
-	amkSendMotorRequest (amk, false, false, false, true, 0, 0, 0, timeout);
-	return amkSendMotorRequest (amk, true, false, true, false, 0, 0, 0, timeout);
+	return amkSendMotorRequest (amk, false, false, false, true, 0, 0, 0, timeout);
 }
 
 msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, bool errorReset,
