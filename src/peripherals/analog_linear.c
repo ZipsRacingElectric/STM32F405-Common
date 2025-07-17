@@ -11,13 +11,13 @@
  * @note This function uses a @c void* for the object reference as to make the signature usable by callbacks.
  * @param object The sensor to update (must be a @c linearSensor_t* ).
  * @param sample The read sample.
- * @param valid Indicates the validity of the sample.
+ * @param sampleVdd The sample of the analog supply voltage.
  */
-static void callback (void* object, uint16_t sample);
+static void callback (void* object, uint16_t sample, uint16_t sampleVdd);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool linearSensorInit (linearSensor_t* sensor, linearSensorConfig_t* config)
+bool linearSensorInit (linearSensor_t* sensor, const linearSensorConfig_t* config)
 {
 	// Store the configuration
 	sensor->config = config;
@@ -36,8 +36,11 @@ bool linearSensorInit (linearSensor_t* sensor, linearSensorConfig_t* config)
 	return sensor->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void callback (void* object, uint16_t sample)
+void callback (void* object, uint16_t sample, uint16_t sampleVdd)
 {
+	// TODO(Barach): How to manage this?
+	(void) sampleVdd;
+
 	linearSensor_t* sensor = (linearSensor_t*) object;
 
 	// Store the sample.

@@ -1,5 +1,5 @@
-#ifndef ANALOG_H
-#define ANALOG_H
+#ifndef STM_ADC_H
+#define STM_ADC_H
 
 // STM32 On-Board Analog to Digital Converter ---------------------------------------------------------------------------------
 //
@@ -71,4 +71,4 @@ bool stmAdcInit (stmAdc_t* adc, const stmAdcConfig_t* config);
  */
 bool stmAdcSample (stmAdc_t* adc);
 
-#endif // ANALOG_H
+#endif // STM_ADC_H

@@ -39,8 +39,9 @@ typedef enum
  * @brief Callback for when an analog sensor is sampled.
  * @param object The handler of the callback.
  * @param sample The sample that was taken. Range depends on the resolution of the caller ADC.
+ * @param sampleVdd The sample of the analog supply voltage. May be constant depending on the ADC implementation.
  */
-typedef void (analogSensorHandler_t) (void* sensor, uint16_t sample);
+typedef void (analogSensorHandler_t) (void* sensor, uint16_t sample, uint16_t sampleVdd);
 
 #define ANALOG_SENSOR_FIELDS			\
 	analogSensorHandler_t* callback;	\
