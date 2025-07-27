@@ -63,6 +63,24 @@ void ecumasterInit (ecumasterGps_t* gps, const ecumasterGpsConfig_t* config)
 	canNodeInit ((canNode_t*) gps, &nodeConfig);
 }
 
+ecumasterGpsStatus_t ecumasterGpsStatus (ecumasterGps_t* gps)
+{
+	canNodeLock ((canNode_t*) gps);
+
+	// TODO(Barach): Cleaner way of doing this.
+	ecumasterGpsStatus_t status;
+	if (gps->state != CAN_NODE_VALID)
+		status = ECUMASTER_GPS_STATUS_INVALID;
+	else if (gps->gpsStatus == 1)
+		status = ECUMASTER_GPS_STATUS_NO_FIX;
+	else
+	 	status = ECUMASTER_GPS_STATUS_VALID;
+
+	canNodeUnlock ((canNode_t*) gps);
+
+	return status;
+}
+
 // Receive Functions ----------------------------------------------------------------------------------------------------------
 
 void ecumasterHandlePosition (ecumasterGps_t* gps, CANRxFrame* frame)

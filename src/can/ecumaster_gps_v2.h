@@ -17,10 +17,9 @@
 
 typedef enum
 {
-	ECUMASTER_GPS_STATUS_ERROR	= 0,
-	ECUMASTER_GPS_STATUS_NO_FIX	= 1,
-	ECUMASTER_GPS_STATUS_GPS_2D	= 3,
-	ECUMASTER_GPS_STATUS_GPS_3D	= 4
+	ECUMASTER_GPS_STATUS_INVALID	= 0,
+	ECUMASTER_GPS_STATUS_NO_FIX		= 1,
+	ECUMASTER_GPS_STATUS_VALID		= 3,
 } ecumasterGpsStatus_t;
 
 typedef struct
@@ -54,5 +53,7 @@ typedef struct
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void ecumasterInit (ecumasterGps_t* gps, const ecumasterGpsConfig_t* config);
+
+ecumasterGpsStatus_t ecumasterGpsStatus (ecumasterGps_t* gps);
 
 #endif // ECUMASTER_GPS_V2_H
