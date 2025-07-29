@@ -1,42 +1,11 @@
 // Header
 #include "bms.h"
 
-// C Standard Library
-#include <math.h>
-
-// Conversions ----------------------------------------------------------------------------------------------------------------
-
-// Voltage values (unit V)
-#define VOLTAGE_FACTOR			0.03125f
-#define WORD_TO_VOLTAGE(word)	((word) * VOLTAGE_FACTOR)
-
-// Temperature values (unit C)
-#define TEMPERATURE_FACTOR			0.5f
-#define TEMPERATURE_OFFSET			-28.0f
-#define WORD_TO_TEMPERATURE(word)	((word) * TEMPERATURE_FACTOR + TEMPERATURE_OFFSET)
-
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
-// Cell voltage messages
-#define VOLT_MESSAGE_BASE_ID	0x700
-#define VOLT_MESSAGE_COUNT		0x012
+#define STATUS_MESSAGE_ID 0x727
 
-// Temperature messages
-#define TEMP_MESSAGE_BASE_ID	0x712
-#define TEMP_MESSAGE_COUNT		0x008
-
-// Message Flags --------------------------------------------------------------------------------------------------------------
-
-#define VOLT_MESSAGE_BASE_FLAG_POS 0x00
-#define TEMP_MESSAGE_BASE_FLAG_POS (VOLT_MESSAGE_BASE_FLAG_POS + VOLT_MESSAGE_COUNT)
-
-// Message Packing ------------------------------------------------------------------------------------------------------------
-
-// Cell Voltage Message
-#define VOLT_MESSAGE_VOLT_COUNT 8
-
-// Temperature Message
-#define TEMP_MESSAGE_TEMP_COUNT 8
+#define STATUS_MESSAGE_FLAG_POS 0x00
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
@@ -44,7 +13,7 @@ int8_t bmsReceiveHandler (void *node, CANRxFrame *frame);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void bmsInit (bms_t* bms, bmsConfig_t* config)
+void bmsInit (bms_t* bms, const bmsConfig_t* config)
 {
 	// Initialize the CAN node
 	canNodeConfig_t nodeConfig =
@@ -53,25 +22,28 @@ void bmsInit (bms_t* bms, bmsConfig_t* config)
 		.receiveHandler	= bmsReceiveHandler,
 		.timeoutHandler	= NULL,
 		.timeoutPeriod	= config->timeoutPeriod,
-		.messageCount	= VOLT_MESSAGE_COUNT + TEMP_MESSAGE_COUNT
+		.messageCount	= 1
 	};
 	canNodeInit ((canNode_t*) bms, &nodeConfig);
 }
 
 // Receive Functions ----------------------------------------------------------------------------------------------------------
 
-void bmsHandleVoltMessage (bms_t* bms, CANRxFrame* frame, uint8_t cellIndex)
+void bmsHandleStatusMessage (bms_t* bms, CANRxFrame* frame)
 {
-	// Parse the cell voltages, 4 per message stopping at BMS_CELL_COUNT
-	for (uint8_t index = 0; index < VOLT_MESSAGE_VOLT_COUNT && cellIndex + index >= BMS_CELL_COUNT; ++index)
-		bms->cellVoltages [cellIndex + index] = WORD_TO_VOLTAGE (frame->data16 [index]);
-}
-
-void bmsHandleTempMessage (bms_t* bms, CANRxFrame* frame, uint8_t tempIndex)
-{
-	// Parse the temperatures, 4 per message stopping at BMS_TEMPERATURE_COUNT
-	for (uint8_t index = 0; index < TEMP_MESSAGE_TEMP_COUNT && tempIndex + index >= BMS_TEMPERATURE_COUNT; ++index)
-		bms->temperatures [tempIndex + index] = WORD_TO_TEMPERATURE (frame->data16 [index]);
+	bms->undervoltageFault		= (frame->data8 [0] & 0b00000001) == 0b00000001;
+	bms->overvoltageFault		= (frame->data8 [0] & 0b00000010) == 0b00000010;
+	bms->undertemperatureFault	= (frame->data8 [0] & 0b00000100) == 0b00000100;
+	bms->overtemperatureFault	= (frame->data8 [0] & 0b00001000) == 0b00001000;
+	bms->senseLineFault			= (frame->data8 [0] & 0b00010000) == 0b00010000;
+	bms->isoSpiFault			= (frame->data8 [0] & 0b00100000) == 0b00100000;
+	bms->selfTestFault			= (frame->data8 [0] & 0b01000000) == 0b01000000;
+	bms->charging				= (frame->data8 [0] & 0b10000000) == 0b10000000;
+	bms->balancing				= (frame->data8 [1] & 0b00000001) == 0b00000001;
+	bms->shutdownClosed			= (frame->data8 [1] & 0b00000010) == 0b00000010;
+	bms->prechargeComplete		= (frame->data8 [1] & 0b00000100) == 0b00000100;
+	bms->bmsRelayStatus			= (frame->data8 [1] & 0b00010000) == 0b00010000;
+	bms->imdRelayStatus			= (frame->data8 [1] & 0b00100000) == 0b00100000;
 }
 
 int8_t bmsReceiveHandler (void *node, CANRxFrame *frame)
@@ -80,19 +52,11 @@ int8_t bmsReceiveHandler (void *node, CANRxFrame *frame)
 	uint16_t id = frame->SID;
 
 	// Identify and handle the message.
-	if (id >= VOLT_MESSAGE_BASE_ID && id < VOLT_MESSAGE_BASE_ID + VOLT_MESSAGE_COUNT)
+	if (id == STATUS_MESSAGE_ID)
 	{
 		// Cell voltage message.
-		uint8_t messageOffset = (uint8_t) (id - VOLT_MESSAGE_BASE_ID);
-		bmsHandleVoltMessage (bms, frame, messageOffset * VOLT_MESSAGE_VOLT_COUNT);
-		return messageOffset + VOLT_MESSAGE_BASE_FLAG_POS;
-	}
-	else if (id >= TEMP_MESSAGE_BASE_ID && id < TEMP_MESSAGE_BASE_ID + TEMP_MESSAGE_COUNT)
-	{
-		// Temperature message.
-		uint8_t messageOffset = (uint8_t) (id - TEMP_MESSAGE_BASE_ID);
-		bmsHandleTempMessage (bms, frame, messageOffset * TEMP_MESSAGE_TEMP_COUNT);
-		return messageOffset + TEMP_MESSAGE_BASE_FLAG_POS;
+		bmsHandleStatusMessage (bms, frame);
+		return STATUS_MESSAGE_FLAG_POS;
 	}
 	else
 	{
