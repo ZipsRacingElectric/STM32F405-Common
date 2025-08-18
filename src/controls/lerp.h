@@ -41,6 +41,12 @@ float inverseLerp (float x, float a, float b);
 float lerp2d (float cx, float ax, float ay, float bx, float by);
 
 /**
+ * @brief Version of @c lerp2d that saturates the output for values of @c cx
+ * outside the range of [ax, bx].
+ */
+float lerp2dSaturated (float cx, float ax, float ay, float bx, float by);
+
+/**
  * @brief Performs 3D bilinear interpolation on between the points Q11, Q12, Q21, and Q22.
  * @param x3 The input point's x-coordinate.
  * @param y3 The input point's y-coordinate.

@@ -1,6 +1,9 @@
 // Header
 #include "lerp.h"
 
+// C Standard Library
+#include <stdbool.h>
+
 float lerp (float x, float a, float b)
 {
 	// Scale X by range, then offset by min.
@@ -25,6 +28,23 @@ float lerp2d (float cx, float ax, float ay, float bx, float by)
 
 	// Perform inverse lerp then lerp.
 	return (cx - ax) / (bx - ax) * (by - ay) + ay;
+}
+
+float lerp2dSaturated (float cx, float ax, float ay, float bx, float by)
+{
+	// Determine which value is the minimum
+	bool aIsMin = ax < bx;
+
+	// Min saturation
+	if (cx < (aIsMin ? ax : bx))
+		return aIsMin ? ay : by;
+
+	// Max saturation
+	if (cx > (aIsMin ? bx : ax))
+		return aIsMin ? by : ay;
+
+	// Within bounds, use normal form.
+	return lerp2d (cx, ax, ay, bx, by);
 }
 
 float bilinearInterpolation (float x3, float y3, float x1, float y1, float x2, float y2,

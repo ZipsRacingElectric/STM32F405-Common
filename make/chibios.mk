@@ -83,7 +83,7 @@ ASMXSRC = $(ALLXASMSRC)
 INCDIR = $(CONFDIR) $(ALLINC)
 
 # Define C warning options here.
-CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
+CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes -fno-strict-aliasing
 
 # Common Rules ----------------------------------------------------------------------------------------------------------------
 
