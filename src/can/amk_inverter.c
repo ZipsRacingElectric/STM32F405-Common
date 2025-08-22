@@ -263,12 +263,10 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 		}
 	};
 
+	// Transmit the message on the main driver and bridge driver.
 	msg_t result = canTransmitTimeout (amk->driver, CAN_ANY_MAILBOX, &transmit, timeout);
-	if (result != MSG_OK)
-		canFaultCallback (result);
-
-	// Relay to the bridge driver.
-	canTransmitTimeout (amk->bridgeDriver, CAN_ANY_MAILBOX, &transmit, timeout);
+	if (amk->bridgeDriver != NULL)
+		canTransmitTimeout (amk->bridgeDriver, CAN_ANY_MAILBOX, &transmit, timeout);
 
 	return result;
 }
