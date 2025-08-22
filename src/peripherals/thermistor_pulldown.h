@@ -70,7 +70,7 @@ typedef struct
 {
 	ANALOG_SENSOR_FIELDS;
 	const thermistorPulldownConfig_t* config;
-	float sample;
+	uint16_t sample;
 	float resistance;
 	float temperature;
 	bool undertemperatureFault;

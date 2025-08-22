@@ -57,7 +57,7 @@ void callback (void* object, uint16_t sample, uint16_t sampleVdd)
 	}
 	else if (sample == 0)
 	{
-		thermistor->sample = ANALOG_SENSOR_SAMPLE_INVALID;
+		thermistor->state = ANALOG_SENSOR_SAMPLE_INVALID;
 		thermistor->overtemperatureFault = true;
 		thermistor->temperature = thermistor->config->temperatureMax;
 		return;

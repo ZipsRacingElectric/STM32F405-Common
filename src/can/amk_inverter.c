@@ -101,7 +101,7 @@ amkInverterState_t amkGetState (amkInverter_t* amk)
 		return AMK_STATE_ERROR;
 	if (amk->quitInverter)
 		return AMK_STATE_READY_ENERGIZED;
-	if (amk->dcBusVoltage > 430) // TODO(Barach): Precharge complete signal?
+	if (amk->dcBusVoltage > 430)
 		return AMK_STATE_READY_HIGH_VOLTAGE;
 
 	return AMK_STATE_READY_LOW_VOLTAGE;
@@ -191,7 +191,6 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 	if (errorReset && error)
 		return amkSendErrorResetRequest (amk, timeout);
 
-	// TODO(Barach): Revert
 	// If the inverter isn't energized, send the request to energize.
 	if (!energized)
 		return amkSendEnergizationRequest (amk, true, errorReset, timeout);
