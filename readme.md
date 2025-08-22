@@ -19,8 +19,9 @@
 │   ├── controls        - Code related to control systems.
 │   └── peripherals     - Code related to board hardware and peripherals.
 │       ├── adc         - Analog sensors and ADC-based hardware.
-│       ├── i2c         - I2C based devices.
-│       └── interface   - Common interfaces a variety of devices may implement.
+│       ├── i2c         - I2C based device drivers.
+│       ├── interface   - Common interfaces a variety of devices may implement.
+│       └── spi         - SPI based device drivers.
 └── stm32f405.svd       - SVD file for the STM32F405 microcontroller. Used for
                           the debugger.
 ```
