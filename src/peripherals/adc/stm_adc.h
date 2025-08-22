@@ -12,7 +12,7 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "analog_sensor.h"
+#include "peripherals/interface/analog_sensor.h"
 
 // ChibiOS
 #include "hal.h"

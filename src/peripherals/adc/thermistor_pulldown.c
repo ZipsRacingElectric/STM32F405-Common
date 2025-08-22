@@ -1,5 +1,5 @@
 // Header
-#include "thermistor_pulldown.h"
+#include "peripherals/adc/thermistor_pulldown.h"
 
 // Includes
 #include "controls/steinhart_hart.h"

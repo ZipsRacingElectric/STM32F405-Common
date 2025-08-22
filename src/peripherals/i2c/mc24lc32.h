@@ -6,12 +6,12 @@
 // Author: Cole Barach
 // Date Created: 2024.09.29
 //
-// Description: Driver for the Microchip 24LC32 I2C EEPROM.
+// Description: Driver for the Microchip 24LC32 I2C EEPROM. This device implements the eeprom interface.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "eeprom.h"
+#include "peripherals/interface/eeprom.h"
 
 // ChibiOS
 #include "hal.h"

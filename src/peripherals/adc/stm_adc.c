@@ -1,5 +1,5 @@
 // Header
-#include "stm_adc.h"
+#include "peripherals/adc/stm_adc.h"
 
 bool stmAdcInit (stmAdc_t* adc, const stmAdcConfig_t* config)
 {

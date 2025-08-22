@@ -1,5 +1,5 @@
 // Header
-#include "mc24lc32.h"
+#include "peripherals/i2c/mc24lc32.h"
 
 // ChibiOS
 #include "hal_i2c.h"

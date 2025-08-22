@@ -11,7 +11,7 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "peripherals/eeprom.h"
+#include "peripherals/interface/eeprom.h"
 
 // ChibiOS
 #include "hal.h"

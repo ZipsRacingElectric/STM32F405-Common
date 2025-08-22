@@ -7,6 +7,6 @@ endef
 include common/src/controls/steinhart_hart.mk
 
 # Add the module's source file to the compilation
-CSRC += common/src/peripherals/thermistor_pulldown.c
+CSRC += common/src/peripherals/adc/thermistor_pulldown.c
 
 endif # THERMISTOR_PULLDOWN_MK

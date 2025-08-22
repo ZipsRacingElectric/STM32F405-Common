@@ -1,5 +1,5 @@
 // Header
-#include "analog_linear.h"
+#include "peripherals/adc/analog_linear.h"
 
 // Includes
 #include "controls/lerp.h"
