@@ -1,4 +1,10 @@
 # STM32F405 Common Library
+The STM32F405 common library is a library of common code used by Zips Racing's firmware. The main purpose of this is to prevent code duplication across projects, especially between different revisions of the same firmware. Even if a piece of software isn't currently used in multiple places, the potential that it may be in the future can be incentive enough to move it into here.
+
+For documentation on specific sections of this library, see the header of the relevant source file.
+
+For documentation of device specifications, see the [doc/datasheets](doc/datasheets) directory.
+
 ## Directory Structure
 ```
 .
@@ -18,10 +24,16 @@
 │   │                     vehicle's bus.
 │   ├── controls        - Code related to control systems.
 │   └── peripherals     - Code related to board hardware and peripherals.
-│       ├── adc         - Analog sensors and ADC-based hardware.
-│       ├── i2c         - I2C based device drivers.
+│       │                 Specifically, this refers to electrical & mechanical
+│       │                 hardware that is 'owned' by a board.
+│       ├── adc         - Analog sensors and ADC-based hardware. These devices
+│       │                 take an analog measurment and apply a transfer
+│       │                 function to it.
+│       ├── i2c         - I2C based device drivers. These devices may implement
+│       │                 a variety of interfaces.
 │       ├── interface   - Common interfaces a variety of devices may implement.
-│       └── spi         - SPI based device drivers.
+│       └── spi         - SPI based device drivers. These devices may implement
+│                         a variety of interfaces.
 └── stm32f405.svd       - SVD file for the STM32F405 microcontroller. Used for
                           the debugger.
 ```
