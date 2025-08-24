@@ -22,7 +22,7 @@ THD_FUNCTION (canRxThread, arg)
 	while (true)
 	{
 		// Block until the next message arrives, or timeout check, whichever is first
-		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &rxFrame, config->period);
+		msg_t result = canReceiveTimeout (config->driver, CAN_ANY_MAILBOX, &rxFrame, config->period);
 		timePrevious = timeCurrent;
 		timeCurrent = chVTGetSystemTimeX ();
 
