@@ -19,26 +19,47 @@
 
 typedef enum
 {
-	CAN_NODE_VALID		= 0,
-	CAN_NODE_INCOMPLETE	= 1,
-	CAN_NODE_TIMEOUT	= 2
+	/// @brief Indicates all the data in a CAN node is complete and up-to-date.
+	CAN_NODE_VALID = 0,
+
+	/// @brief Indicates some data in a CAN node is not complete (due to a timeout).
+	CAN_NODE_INCOMPLETE = 1,
+
+	/// @brief Indicates all data in a CAN node is invalid (has timed out).
+	CAN_NODE_TIMEOUT = 2
 } canNodeState_t;
 
 /**
- * @brief Function for handling received CAN messages. This function should return a unique index for what message was
- * received, or -1 to indicate the message does not belong to this node.
+ * @brief Function for handling received CAN messages. This should check the message's @c SID / @c EID to determine if the
+ * message belongs to this node.
+ * @param node A pointer to the node to update (datatype is implementation specific).
+ * @param frame The frame that was received.
+ * @return A unique index for what message was received, or -1 to indicate the message does not belong to this node.
  */
 typedef int8_t (canReceiveHandler_t) (void* node, CANRxFrame* frame);
 
+/**
+ * @brief Function for handling a generic event triggered by a CAN node.
+ * @param node The CAN node that triggered the event.
+ */
 typedef void (canEventHandler_t) (void* node);
 
 typedef struct
 {
-	CANDriver*				driver;
-	canReceiveHandler_t*	receiveHandler;
-	canEventHandler_t*		timeoutHandler;
-	sysinterval_t			timeoutPeriod;
-	uint8_t					messageCount;
+	/// @brief The CAN driver of the bus the node belongs to. Used for sending messages to the node.
+	CANDriver* driver;
+
+	/// @brief Function for handling received messages that may or may not belong to the node.
+	canReceiveHandler_t* receiveHandler;
+
+	/// @brief Optional function to invoke when the node's data times out, use @c NULL to not handle timeout events.
+	canEventHandler_t* timeoutHandler;
+
+	/// @brief The interval to timeout the node's data after.
+	sysinterval_t timeoutPeriod;
+
+	/// @brief The total number of messages belonging to the node. Used to determine if the dataset is complete or not.
+	uint8_t messageCount;
 } canNodeConfig_t;
 
 #define CAN_NODE_FIELDS							\
@@ -64,7 +85,8 @@ typedef struct
 // CAN Node Functions ---------------------------------------------------------------------------------------------------------
 
 /**
- * @brief Initializes the CAN node using the specified configuration.
+ * @brief Initializes the CAN node using the specified configuration. Note that this should only be used internally by CAN
+ * nodes. To initialize an implementation of a node, use the implementation provided initializer.
  * @param node The node to initialize.
  * @param config The configuration to use.
  */

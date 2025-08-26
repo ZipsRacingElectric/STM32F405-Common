@@ -7,6 +7,7 @@
 // Date Created: 2024.09.29
 //
 // Description: Driver for the Microchip 24LC32 I2C EEPROM. This device implements the eeprom interface.
+// TODO(Barach): Better docs.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
