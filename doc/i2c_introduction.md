@@ -8,7 +8,7 @@ For a basic introduction to the I2C protocol, see the video below:
 ## ChibiOS Interface
 In ChibiOS, I2C is exposed through the I2C driver. The comprehensive driver documentation can be found at the below URL, however it is quite technical.
 
-[common/doc/chibios/ChibiOS HAL Reference Manual.pdf](common/doc/chibios/ChibiOS&#32;HAL&#32;Reference&#32;Manual.pdf), page 250.
+[chibios/ChibiOS HAL Reference Manual.pdf](chibios/ChibiOS&#32;HAL&#32;Reference&#32;Manual.pdf), page 250.
 
 An excerpt of the most useful functionality is provided here.
 
