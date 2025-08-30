@@ -20,7 +20,7 @@ bool as5600ReadRegister (as5600_t* as5600, uint8_t addr, uint8_t* data)
 
 	// TODO: Perform a read operation.
 	// Should use: i2cMasterTransmit (i2cp, addr, txbuf, txbytes, rxbuf, rxbytes);
-	// See common/doc/datasheets/TPS1H100-Q1 Datasheet.pdf for how this should be done (pg.10 to pg.17).
+	// See common/doc/datasheets/AS5600 Datasheet.pdf for how this should be done (pg.10 to pg.17).
 
 	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cReleaseBus (as5600->config->i2c);
@@ -38,7 +38,7 @@ bool as5600WriteRegister (as5600_t* as5600, uint8_t addr, uint8_t data)
 
 	// TODO: Perform a write operation.
 	// Should use: i2cMasterTransmit (i2cp, addr, txbuf, txbytes, rxbuf, rxbytes);
-	// See common/doc/datasheets/TPS1H100-Q1 Datasheet.pdf for how this should be done (pg.10 to pg.17).
+	// See common/doc/datasheets/AS5600 Datasheet.pdf for how this should be done (pg.10 to pg.17).
 
 	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cReleaseBus (as5600->config->i2c);

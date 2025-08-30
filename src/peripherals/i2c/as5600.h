@@ -3,7 +3,7 @@
 
 // AS5600 Device Driver -------------------------------------------------------------------------------------------------------
 //
-// Author:
+// Author: Cole Barach, ...
 // Date Created: 2025.08.22
 //
 // Description: I2C driver class for the AS5600 angular encoder.
