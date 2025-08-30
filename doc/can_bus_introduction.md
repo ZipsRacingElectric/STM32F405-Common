@@ -4,7 +4,7 @@ CAN-Bus (or more specifically, CAN 2.0a) is a communication protocol used for co
 [CSS-Electronics - CAN-Bus Explained - A Simple Intro (https://www.youtube.com/watch?v=oYps7vT708E)](https://www.youtube.com/watch?v=oYps7vT708E)
 
 ## ChibiOS Interface
-In ChibiOS, I2C is exposed through the CAN driver. The comprehensive driver documentation can be found at the below URL, however it is quite technical.
+In ChibiOS, CAN is exposed through the CAN driver. The comprehensive driver documentation can be found at the below URL, however it is quite technical.
 
 [chibios/ChibiOS HAL Reference Manual.pdf](chibios/ChibiOS&#32;HAL&#32;Reference&#32;Manual.pdf), page 83.
 
