@@ -1,4 +1,4 @@
-# Introduction to CAN Nodes - Zips Racing
+# Writing CAN Nodes - Zips Racing
 The STM32F405 common library further abstracts ChibiOS's CAN interface with the CAN node interface. The main purpose of a CAN node is to decode the CAN messages of a specific devices a the CAN-bus (sensors and control units, for example). The CAN node loosely uses an inheritance pattern, meaning there is an interface (the `canNode_t` struct) and then there are implementors of said interface (ex. `bms_t` or `amk_t`). The interface is never meant to be directly instanced, rather it simply describes how specific CAN nodes should look.
 
 ## Declaration
@@ -96,35 +96,11 @@ typedef struct
 	// All CAN nodes must start with this macro.
 	CAN_NODE_FIELDS;
 
-	// 16-bit field transmitted in little-endian.
-	uint16_t littleEndianField;
-
-	// 16-bit field transmitted in big-endian.
-	uint16_t bigEndianField;
-
-	// 32-bit field transmitted in big-endian.
-	uint32_t bigEndianField2;
-
-	// 32-bit field.
-	uint32_t longField;
-
-	// 16-bit signed field.
-	int16_t signedField;
-
-	// Floating-point number field.
-	float floatingField;
-
-	// 1-bit field.
-	bool boolField;
-
-	// 3-bit field.
-	uint8_t smallField;
-
-	// 12-bit field.
-	uint8_t mediumField;
-
-	// 1-bit field.
-	bool boolField2;
+	float signal0;
+	float signal1;
+	uint32_t signal2;
+	uint32_t signal3;
+	uint8_t signal4;
 } testNode_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -137,6 +113,8 @@ void testNodeInit (testNode_t* testNode, const testNodeConfig_t* config);
 
 Source file `test_node.c`:
 ```
+// Note that all signals in this example are little-endian, for convenience.
+
 // Header
 #include "test_node.h"
 
@@ -185,62 +163,24 @@ void testNodeInit (testNode_t* testNode, const testNodeConfig_t* config)
 // Decodes the 1st message
 void testNodeHandleMessage0 (testNode_t* testNode, CANRxFrame* frame)
 {
-	// This signal is a 16-bit unsigned integer, transmitted in little-endian.
-	// The STM's native format is little-endian, so we can read the 2 bytes directly into our field.
-	// Note: data16 [0] refers to bytes 0 & 1.
-	testNode->littleEndianField = frame->data16 [0];
-
-	// This signal is also 16-bit unsigned integer, however it is transmitted in big-endian.
-	// Here we have to reverse the data, the __REV16 instruction reverses the endianness
-	// of a 16-bit number, which is exactly what we need.
-	// Note: data16 [1] refers to bytes 2 & 3.
-	testNode->bigEndianField = __REV16 (frame->data16 [1]);
-
-	// This signal is a 32-bit unsigned integer, transmitted in big-endian.
-	// We have to reverse the endianess here too, however this is a 32-bit number so we have to use the __REV instruction,
-	// which operates on 32-bit numbers.
-	// Note: data32 [1] refers to bytes 4, 5, 6, & 7.
-	testNode->bigEndianField2 = __REV (frame->data32 [1]);
-
-	// Note that all other signals in this example are little-endian, for convenience.
+	// Update the relevant fields. In this case, the message contains 2 float signals.
+	testNode->signal0 = frame->data16 [0] * 0.1f;
+	testNode->signal1 = frame->data16 [1] * 0.1f;
 }
 
 // Decodes the 2nd message
 void testNodeHandleMessage1 (testNode_t* testNode, CANRxFrame* frame)
 {
-	// Since this is little-endian, we can just copy directly from the buffer as we did with the first message.
-	// Note: data32 [0] refers to bytes 0, 1, 2, & 3.
-	testNode->longField = frame->data32 [0];
-
-	// This signal is a 16-bit signed integer.
-	// For a signed integer, we take the data (which is interpreted as a uint16_t) and cast it into a int16_t.
-	// Note: data16 [2] refers to bytes 4 & 5.
-	testNode->signedField = (int16_t) frame->data16 [2];
+	// Update the relevant fields. In this case the message contains 2 32-bit unsigned ints.
+	testNode->signal2 = frame->data32 [0];
+	testNode->signal3 = frame->data32 [1];
 }
 
 // Decodes the 3rd message
 void testNodeHandleMessage2 (testNode_t* testNode, CANRxFrame* frame)
 {
-	// If the node has a scale factor and offset, we can convert it into a float.
-	// This is using a scale factor of 0.1 / LSB and offset of 100.
-	// Here we are using a 16-bit signed integer, so we first cast the raw data into the correct type.
-	// After casting, we apply our scale factor and offset.
-	testNode->floatingField = ((int16_t) frame->data16 [0]) * 0.1f + 100.0f;
-
-	// For signals that aren't multiples of 8-bit, we'll need to do bitwise operators. This one is a 3-bit unsigned integer, so
-	// we use the bitwise AND operator to mask out the 3 bits we are interested in.
-	testNode->smallField = frame->data16 [1] & 0b111;
-
-	// For signals that don't start at bit 0, we'll need to use a shift operator. If we also need to mask, we can do so after
-	// shifting.
-	testNode->mediumField = (frame->data16 [1] >> 3) & 0b111111111111;
-
-	// For 1-bit signals, we can treat them as booleans. By masking out the single bit we are interested in and checking its
-	// value, it is converted into a bool.
-	testNode->boolField = (frame->data8 [4] & 0b1) == 0b1;
-
-	// We can also shift before converting into a bool.
-	testNode->boolField2 = ((frame->data8 [4] >> 1) & 0b1) == 0b1;
+	// Update the relevant fields. In this case, the message only contains 1 byte.
+	testNode->signal4 = frame->data8 [0];
 }
 
 int8_t testNodeReceiveHandler (void* node, CANRxFrame* frame)
