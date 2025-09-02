@@ -1,7 +1,7 @@
-# Copy the standard configuration into the build directory, where the debugger expects it to be.
+# Copy the low-speed configuration into the build directory, where the debugger expects it to be.
 # - The reason for doing this is to make the debugger unaware of whether we are using the standard or the low-speed
 #   configuration.
-$(BUILDDIR)/stm32f405.cfg: $(COMMONDIR)/stm32f405.cfg
+$(BUILDDIR)/stm32f405.cfg: $(COMMONDIR)/stm32f405_low_speed.cfg
 	mkdir -p $(BUILDDIR)
 	cp $< $@
 
