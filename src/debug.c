@@ -1,6 +1,10 @@
 // Header
 #include "debug.h"
 
+// Globals --------------------------------------------------------------------------------------------------------------------
+
+BaseSequentialStream* debugStream = NULL;
+
 // Threads --------------------------------------------------------------------------------------------------------------------
 
 static THD_WORKING_AREA (heartbeatWa, 128);
@@ -20,6 +24,17 @@ static THD_FUNCTION (heartbeatThread, arg)
 }
 
 // Functions ------------------------------------------------------------------------------------------------------------------
+
+void debugSerialInit (SerialDriver* serial, SerialConfig* config)
+{
+	// Start the driver
+	sdStart (serial, config);
+
+	// Set the debug stream
+	debugStream = (BaseSequentialStream*) serial;
+
+	debugPrintf ("Initializing board '%s'...\r\n", BOARD_NAME);
+}
 
 void debugHeartbeatStart (ioline_t* ledLine, tprio_t priority)
 {

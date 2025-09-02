@@ -12,8 +12,26 @@
 
 // ChibiOS
 #include "hal.h"
+#include "chprintf.h"
+
+// Globals --------------------------------------------------------------------------------------------------------------------
+
+extern BaseSequentialStream* debugStream;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
+
+/**
+ * @brief Printf-like function for printing to the debug serial port. Note this can only be used after @c debugSerialInit has
+ * been called.
+ */
+#define debugPrintf(...) chprintf (debugStream, __VA_ARGS__)
+
+/**
+ * @brief Initializes the specified serial driver as the debugging serial port.
+ * @param serial The driver to initialize.
+ * @param config The configuration to use. Use @c NULL for the default config.
+ */
+void debugSerialInit (SerialDriver* serial, SerialConfig* config);
 
 /**
  * @brief Starts board's heartbeat thread.
