@@ -144,12 +144,20 @@ Return Value:
 ## Receiving Messages
 File `main.c`:
 ```
+// Includes -------------------------------------------------------------------------------------------------------------------
+
+// Includes
+#include "debug.h"
+
+// ChibiOS
 #include "ch.h"
 #include "hal.h"
 
+// Constants ------------------------------------------------------------------------------------------------------------------
+
 // Configuration of the CAN 1 peripheral. Don’t worry too much
 // about the details of this, its a bit out-of-scope for this
-// project.
+// example.
 
 static const CANConfig CAN_DRIVER_CONFIG =
 {
@@ -162,11 +170,18 @@ static const CANConfig CAN_DRIVER_CONFIG =
 		CAN_BTR_BRP (2)
 };
 
+// Entrypoint -----------------------------------------------------------------------------------------------------------------
+
 int main (void)
 {
-	// ChibiOS initialization.
+	// ChibiOS Initialization
 	halInit ();
 	chSysInit ();
+
+	// Debug Initialization
+	ioline_t ledLine = LINE_LED_HEARTBEAT;
+	debugHeartbeatStart (&ledLine, LOWPRIO);
+	debugSerialInit (&SD1, NULL);
 
 	// CAN 1 driver initialization.
 	canStart (&CAND1, &CAN_DRIVER_CONFIG);
@@ -180,7 +195,6 @@ int main (void)
 	// Loop for receiving CAN messages.
 	while (true)
 	{
-
 		// Block execution until a frame is received.
 		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &frame,
 			TIME_INFINITE);
@@ -192,66 +206,84 @@ int main (void)
 		// Check the SID to determine what frame was received.
 		if (frame.SID == 0x500)
 		{
+			debugPrintf ("Message 0x500 recieved:\r\n");
+
 			// This signal is a 16-bit unsigned integer, transmitted in little-endian.
 			// The STM's native format is little-endian, so we can read the 2 bytes directly into our field.
 			// Note: data16 [0] refers to bytes 0 & 1.
 			uint16_t littleEndianSignal = frame.data16 [0];
+			debugPrintf ("\tlittleEndianSignal = %u = 0x%04X\r\n", littleEndianSignal, littleEndianSignal);
 
 			// This signal is also 16-bit unsigned integer, however it is transmitted in big-endian.
 			// Here we have to reverse the data, the __REV16 instruction reverses the endianness
 			// of a 16-bit number, which is exactly what we need.
 			// Note: data16 [1] refers to bytes 2 & 3.
 			uint16_t bigEndianSignal0 = __REV16 (frame.data16 [1]);
+			debugPrintf ("\tbigEndianSignal0 = %u = 0x%04X\r\n", bigEndianSignal0, bigEndianSignal0);
 
 			// This signal is a 32-bit unsigned integer, transmitted in big-endian.
 			// We have to reverse the endianess here too, however this is a 32-bit number so we have to use the __REV
 			// instruction, which operates on 32-bit numbers.
 			// Note: data32 [1] refers to bytes 4, 5, 6, & 7.
 			uint32_t bigEndianSignal1 = __REV (frame.data32 [1]);
+			debugPrintf ("\tbigEndianSignal1 = %u = 0x%08X\r\n", bigEndianSignal1, bigEndianSignal1);
 
 			// Note that all other signals in this example are little-endian, for convenience.
 		}
 
 		if (frame.SID == 0x501)
 		{
+			debugPrintf ("Message 0x501 recieved:\r\n");
+
 			// Since this is little-endian, we can just copy directly from the buffer as we did with the first message.
 			// Note: data32 [0] refers to bytes 0, 1, 2, & 3.
 			uint32_t longSignal = frame.data32 [0];
+			debugPrintf ("\tlongSignal = %u = 0x%08X\r\n", longSignal, longSignal);
 
 			// This signal is a 16-bit signed integer.
 			// For a signed integer, we take the data (which is interpreted as a uint16_t) and cast it into a int16_t.
 			// Note: data16 [2] refers to bytes 4 & 5.
 			int16_t signedSignal = (int16_t) frame.data16 [2];
+			debugPrintf ("\tsignedSignal = %i = 0x%04X\r\n", signedSignal, signedSignal);
 		}
 
 		if (frame.SID == 0x502)
 		{
+			debugPrintf ("Message 0x502 recieved:\r\n");
+
 			// If the node has a scale factor and offset, we can convert it into a float.
 			// This is using a scale factor of 0.1 / LSB and offset of 100.
 			// Here we are using a 16-bit signed integer, so we first cast the raw data into the correct type.
 			// After casting, we apply our scale factor and offset.
 			float floatSignal = ((int16_t) frame.data16 [0]) * 0.1f + 100.0f;
+			debugPrintf ("\tfloatSignal = %f\r\n", floatSignal);
 
 			// For signals that aren't multiples of 8-bit, we'll need to do bitwise operators. This one is a 3-bit unsigned
 			// integer, so we use the bitwise AND operator to mask out the 3 bits we are interested in.
 			uint8_t smallSignal = frame.data16 [1] & 0b111;
+			debugPrintf ("\tsmallSignal = %u = 0x%02X\r\n", smallSignal, smallSignal);
 
 			// This is a 12-bit signal. For signals that don't start at bit 0, we'll need to use a shift operator. If we also
 			// need to mask, we can do so after shifting.
 			uint16_t mediumSignal = (frame.data16 [1] >> 3) & 0b111111111111;
+			debugPrintf ("\tmediumSignal = %u = 0x%04X\r\n", mediumSignal, mediumSignal);
 
 			// For 1-bit signals, we can treat them as booleans. By masking out the single bit we are interested in and
 			// checking its value, it is converted into a bool.
 			bool boolSignal0 = (frame.data8 [4] & 0b1) == 0b1;
+			debugPrintf ("\tboolSignal0 = %u\r\n", boolSignal0);
 
 			// We can also shift before converting into a bool.
 			bool boolSignal1 = ((frame.data8 [4] >> 1) & 0b1) == 0b1;
+			debugPrintf ("\tboolSignal1 = %u\r\n", boolSignal1);
 		}
 
 		// We can do something with the data we received here...
 	}
 }
 
-// We don't care about faults here.
-void hardFaultCallback () {}
+void hardFaultCallback (void)
+{
+	// We don't care about faults for this example, so just ignore them.
+}
 ```
