@@ -18,19 +18,16 @@ The toolchain is dependent on the following 3rd party software. The 'Setup' sect
 - Define the ```CHIBIOS_SOURCE_PATH``` environment variable to point to the location the ChibiOS source (Note: For compatibility with FMPP, this path should use the ```/``` separator rather than ```\```).
 
 ### For Windows
-Some dependicies of this project are not natively built for Windows. A solution to this is to use MinGW, a POSIX compatibility layer that allows these programs to be run in Windows.
+Some dependencies of this project are not natively built for Windows. A solution to this is to use MSYS2, a collection of tools and libraries that provide a POSIX-like development environment for Windows.
 
-#### MinGW
-- Download and install MinGW from https://sourceforge.net/projects/mingw/.
-- Install the following MinGW packages:
-	```mingw32-base```
-	```msys-base```
-	```mingw-developer-toolkit```
-- Add ```C:\MinGW\bin\``` and ```C:\MinGW\msys\1.0\bin\``` to your system path.
-- From a command-line, run ```bash --version``` to validate MinGW has been installed.
+#### MSYS2
+- Download and run the MSYS2 installer from [Github](https://github.com/msys2/msys2-installer/releases/).
+- When finished, a terminal should open, if not, open one by searching 'MSYS2 UCRT64' from the start menu.
+- In said terminal, run `pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain`. When prompted, select default (all) packages.
+- Add the `msys64\ucrt64\bin` and `msys64\usr\bin` directories to your system path.
 
 #### Make
-- Make should be installed with MinGW.
+- Make should be installed with MSYS2.
 - From a command-line, run ```make -v``` to validate make has been installed.
 
 #### ARM GNU Toolchain
