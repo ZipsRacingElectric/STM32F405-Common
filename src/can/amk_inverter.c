@@ -10,8 +10,8 @@
 #define WORD_TO_TORQUE(word)	(((int16_t) (word)) * TORQUE_FACTOR)
 
 // Speed values (unit RPM)
-#define SPEED_FACTOR			0.00001f
-#define WORD_TO_SPEED(word)		(SPEED_FACTOR / ((int32_t) (word)))
+#define SPEED_FACTOR			0.0001f
+#define WORD_TO_SPEED(word)		(SPEED_FACTOR * ((int32_t) (word)))
 
 // Voltage values (unit V)
 #define WORD_TO_VOLTAGE(word)	((uint16_t) (word))
@@ -194,10 +194,6 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 	// If the inverter isn't energized, send the request to energize.
 	if (!energized)
 		return amkSendEnergizationRequest (amk, true, errorReset, timeout);
-
-	// Disable regen until interpolation is figured out.
-	if (torqueRequest < 0)
-		torqueRequest = 0;
 
 	// Otherwise, clamp and send the request.
 	amkClampTorqueRequest (&torqueRequest);
