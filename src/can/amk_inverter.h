@@ -20,7 +20,7 @@
 
 /// @brief The maximum amount of requestable regenerative torque, in Nm. Note that this value is a magnitude, actual regen
 /// requests are negative.
-#define AMK_REGENERATIVE_TORQUE_MAX 9.8f
+#define AMK_REGENERATIVE_TORQUE_MAX 21.0f
 
 /**
  * @brief Checks whether or not a torque value is a valid requestable value.
