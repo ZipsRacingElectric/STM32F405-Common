@@ -96,6 +96,9 @@ Return Value:
 ## Complete Example
 This example shows how all the above functions can be combined. While it doesn't do anything meaningful, more useful applications should be able to be extrapolated from this.
 ```
+// Includes
+#include "debug.h"
+
 // ChibiOS
 #include "hal.h"
 
@@ -122,6 +125,11 @@ int main (void)
 	halInit ();
 	chSysInit ();
 
+	// Debug Initialization
+	ioline_t ledLine = LINE_LED_HEARTBEAT;
+	debugHeartbeatStart (&ledLine, LOWPRIO);
+	debugSerialInit (&SD1, NULL);
+
 	// Initialize the I2C1 bus. (uses the above configuration).
 	i2cStart (&I2CD1, &I2C1_CONFIG);
 
@@ -134,12 +142,24 @@ int main (void)
 	uint8_t rxbuf [2];
 
 	// Using the I2C1 bus, 7-bit slave address 0x50, 100ms timeout.
-	msg_t result = i2cMasterTransmitTimeout (&I2CD1, 0x50, txbuf, 4, rxbuf, 2, TIME_MS2I (100));
+	msg_t result = i2cMasterTransmitTimeout (&I2CD1, 0x51, txbuf, 4, rxbuf, 2, TIME_MS2I (100));
 
 	if (result == MSG_OK)
 	{
-		// Success, do something with rxbuf in here.
+		// Success, do something with rxbuf[] here.
+
+		// This just prints the array out
+		debugPrintf ("ACK. rxbuf = [");
+		for (size_t index = 0; index < sizeof (rxbuf); ++index)
+		{
+			debugPrintf ("0x%02X", rxbuf [index]);
+			if (index != sizeof (rxbuf) - 1)
+				debugPrintf (", ");
+		}
+		debugPrintf ("]\r\n");
 	}
+	else
+		debugPrintf ("NACK.\r\n");
 
 	// Second transaction -----------------------------------------------------------------------------------------------------
 
@@ -154,17 +174,25 @@ int main (void)
 		// Success, combine the read values into a 16-bit integer.
 		// Note that in this case, the values are little-endian.
 		uint16_t value = rxbuf [0] | rxbuf [1] << 8;
+
+		debugPrintf ("ACK. Value = %u\r\n", value);
 	}
+	else
+		debugPrintf ("NACK.\r\n");
 
 	// Third transaction ------------------------------------------------------------------------------------------------------
 
 	// Perform a single byte read (no write operation beforehand).
-	result = i2cMasterReceiveTimeout (&I2CD1, 0x50, rxbuf, 1, TIME_MS2I (100));
+	result = i2cMasterReceiveTimeout (&I2CD1, 0x52, rxbuf, 1, TIME_MS2I (100));
 
 	if (result == MSG_OK)
 	{
 		// Success, do something with rxbuf [0] here.
+
+		debugPrintf ("ACK. rxbuf [0] = 0x%02X\r\n", rxbuf [0]);
 	}
+	else
+		debugPrintf ("NACK.\r\n");
 
 	// Stop the I2C1 bus. This doesn't have to be done, just added here to show how its used.
 	i2cStop (&I2CD1);
@@ -172,5 +200,10 @@ int main (void)
 	// Nothing else to do, infinite loop to keep the program alive.
 	while (true)
 		chThdSleepMilliseconds (500);
+}
+
+void hardFaultCallback (void)
+{
+	// We don't care about faults for this example, so just ignore them.
 }
 ```
