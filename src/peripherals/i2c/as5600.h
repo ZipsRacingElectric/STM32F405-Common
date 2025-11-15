@@ -20,14 +20,17 @@
 
 typedef struct
 {
-	/// @brief The 7-bit I2C address of the device.
 	i2caddr_t addr;
-
-	/// @brief The I2C bus of the device.
 	I2CDriver* i2c;
-
-	/// @brief The timeout interval of a transaction.
 	sysinterval_t timeout;
+
+	const uint8_t ZPOS_REG;
+	const uint8_t MPOS_REG;
+	const uint8_t ANGLE_REG;
+
+	uint16_t minAngle;
+	uint16_t maxAngle;
+	uint16_t binAngle;
 } as5600Config_t;
 
 typedef struct
@@ -35,32 +38,18 @@ typedef struct
 	const as5600Config_t* config;
 } as5600_t;
 
-// Functions ------------------------------------------------------------------------------------------------------------------
+// AS5600 Member Functions
+msg_t write8bit(as5600_t* as5600, uint8_t reg, uint8_t value);
+msg_t read8bit(as5600_t* as5600, uint8_t reg, uint8_t* out);
+msg_t write16bit(as5600_t* as5600, uint8_t reg, uint16_t value);
+msg_t read16bit(as5600_t* as5600, uint8_t reg, uint16_t* out);
+msg_t getBinAngle(as5600_t* as5600, uint8_t reg, uint16_t* binAngle);
+msg_t setMinAngle(as5600_t* as5600, uint8_t reg, uint16_t minAngle);
+msg_t setMaxAngle(as5600_t* as5600, uint8_t reg, uint16_t maxAngle);
+void setAngleOffset(as5600_t* as5600);
 
-/**
- * @brief Initializes the device using the specified configuration.
- * @param as5600 The device to initialize.
- * @param config The configuration to use.
- * @return True if successful, false if a hardware failure occurred.
- */
+float convertAngle(uint16_t binAngle);
+
 bool as5600Init (as5600_t* as5600, const as5600Config_t* config);
-
-/**
- * @brief Reads the value of a register from the device.
- * @param as5600 The device to read from.
- * @param addr The address to read from.
- * @param data Buffer to write the read value into.
- * @return True if successful, false otherwise.
- */
-bool as5600ReadRegister (as5600_t* as5600, uint8_t addr, uint8_t* data);
-
-/**
- * @brief Writes a value to a register of the device.
- * @param as5600 The device to write to.
- * @param addr The address to write to.
- * @param data The value to write.
- * @return True if successful, false otherwise.
- */
-bool as5600WriteRegister (as5600_t* as5600, uint8_t addr, uint8_t data);
 
 #endif // AS5600_H
