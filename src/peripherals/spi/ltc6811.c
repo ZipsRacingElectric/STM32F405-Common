@@ -508,7 +508,7 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 			uint16_t sample = device->rx [gpioIndex * 2 - 5] << 8 | device->rx [gpioIndex * 2 - 6];
 
 			// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
-			sensor->callback (sensor, sample, device->vref2);
+			analogSensorUpdate (sensor, sample, device->vref2);
 		}
 	}
 
@@ -532,7 +532,7 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 			uint16_t sample = device->rx [gpioIndex * 2 + 1] << 8 | device->rx [gpioIndex * 2];
 
 			// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
-			sensor->callback (sensor, sample, device->vref2);
+			analogSensorUpdate (sensor, sample, device->vref2);
 		}
 	}
 
@@ -1045,8 +1045,7 @@ void failGpio (ltc6811_t* bottom)
 		for (uint16_t gpioIndex = 0; gpioIndex < LTC6811_GPIO_COUNT; ++gpioIndex)
 		{
 			analogSensor_t* sensor = device->gpioSensors [gpioIndex];
-			if (sensor != NULL)
-				sensor->state = ANALOG_SENSOR_FAILED;
+			analogSensorFail (sensor);
 		}
 	}
 }

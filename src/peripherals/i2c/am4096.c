@@ -63,14 +63,12 @@ bool am4096Sample (am4096_t* am4096)
 	if (result)
 	{
 		// If successful, update the sensor.
-		am4096->sample = RELATIVE_POS_GET_RPOS (relativePos);
-		am4096->config->sensor->callback (am4096->config->sensor, am4096->sample, 4095);
+		analogSensorUpdate (am4096->config->sensor, RELATIVE_POS_GET_RPOS (relativePos), 4095);
 	}
 	else
 	{
 		// Otherwise, put the sensor in the fail state.
-		am4096->sample = 0;
-		am4096->config->sensor->state = ANALOG_SENSOR_FAILED;
+		analogSensorFail (am4096->config->sensor);
 	}
 
 	#if I2C_USE_MUTUAL_EXCLUSION

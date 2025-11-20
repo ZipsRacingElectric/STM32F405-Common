@@ -68,7 +68,7 @@ bool stmAdcSample (stmAdc_t* adc)
 	{
 		// If the conversion failed, set all sensors to the fail state.
 		for (adc_channels_num_t index = 0; index < adc->config->channelCount; ++index)
-			adc->config->sensors [index]->state = ANALOG_SENSOR_FAILED;
+			analogSensorFail (adc->config->sensors [index]);
 
 		return false;
 	}
@@ -81,7 +81,7 @@ bool stmAdcSample (stmAdc_t* adc)
 	// TODO(Barach): VDD
 	// Call the conversion event handlers.
 	for (adc_channels_num_t index = 0; index < adc->config->channelCount; ++index)
-		adc->config->sensors [index]->callback (adc->config->sensors [index], adc->buffer [index], 4095);
+		analogSensorUpdate (adc->config->sensors [index], adc->buffer [index], 4095);
 
 	return true;
 }

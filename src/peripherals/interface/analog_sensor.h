@@ -13,6 +13,7 @@
 
 // C Standard Library
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
@@ -54,5 +55,30 @@ typedef struct
 {
 	ANALOG_SENSOR_FIELDS;
 } analogSensor_t;
+
+// Functions ------------------------------------------------------------------------------------------------------------------
+
+/**
+ * @brief Updates an analog sensor with the latest sample.
+ * @param sensor The sensor to update.
+ * @param sample The sample that was taken. Range depends on the resolution of the caller ADC.
+ * @param sampleVdd The sample of the analog supply voltage. May be constant depending on the ADC implementation.
+ */
+static inline void analogSensorUpdate (analogSensor_t* sensor, uint16_t sample, uint16_t sampleVdd)
+{
+	// Call the sensor's callback
+	if (sensor != NULL)
+		sensor->callback (sensor, sample, sampleVdd);
+}
+
+/**
+ * @brief Indicates to an analog sensor a measurement has failed. This puts the sensor into a failed state so consumers of the
+ * data are aware it is invalid.
+ */
+static inline void analogSensorFail (analogSensor_t* sensor)
+{
+	if (sensor != NULL)
+		sensor->state = ANALOG_SENSOR_FAILED;
+}
 
 #endif // ANALOG_SENSOR_H
