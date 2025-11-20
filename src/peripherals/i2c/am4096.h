@@ -51,7 +51,6 @@ typedef struct
 	EEPROM_FIELDS;
 	const am4096Config_t* config;
 	am4096State_t state;
-	uint16_t sample;
 } am4096_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
