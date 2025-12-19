@@ -110,6 +110,12 @@ typedef struct
 
 	/// @brief The actual power consumption of the device.
 	float actualPower;
+
+	/// @brief The temperature of the inverter.
+	float temperatureInverter;
+
+	/// @brief The temperature of the motor.
+	float temperatureMotor;
 } amkInverter_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

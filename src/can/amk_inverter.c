@@ -22,16 +22,24 @@
 // Power values (unit W)
 #define WORD_TO_POWER(word)		((uint32_t) (word))
 
+// Temperature values (unit C)
+#define TEMP_FACTOR				0.1f
+#define WORD_TO_TEMP(word)		(TEMP_FACTOR * ((uint16_t) (word)))
+
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
 #define MOTOR_REQUEST_ID_OFFSET		0x000
 #define MOTOR_FEEDBACK_ID_OFFSET	0x004
 #define POWER_CONSUMPTION_ID_OFFSET	0x008
+#define TEMPERATURES_ID_OFFSET		0x300
 
 // Message Flags --------------------------------------------------------------------------------------------------------------
 
+#define FLAG_COUNT					3
+
 #define MOTOR_FEEDBACK_FLAG_POS 	0x00
 #define POWER_CONSUMPTION_FLAG_POS	0x01
+#define TEMPERATURES_FLAG_POS		0x02
 
 // Message Packing ------------------------------------------------------------------------------------------------------------
 
@@ -88,7 +96,7 @@ void amkInit (amkInverter_t* amk, const amkInverterConfig_t* config)
 		.receiveHandler	= amkReceiveHandler,
 		.timeoutHandler	= NULL,
 		.timeoutPeriod	= config->timeoutPeriod,
-		.messageCount	= 2
+		.messageCount	= FLAG_COUNT
 	};
 	canNodeInit ((canNode_t*) amk, &canConfig);
 }
@@ -310,6 +318,18 @@ void amkHandlePowerConsumption (amkInverter_t* amk, CANRxFrame* frame)
 	amk->actualPower	= WORD_TO_POWER (frame->data32 [1]);
 }
 
+void amkHandleTemperatures (amkInverter_t* amk, CANRxFrame* frame)
+{
+	// Temperatures Message: (ID Offset 0x300)
+	//   Bytes 0 to 1: Inverter temperature
+	//   Bytes 2 to 3: Motor temperature
+	//   Bytes 4 to 5: Servo temperature (unused)
+	//   Bytes 6 to 7: IGBT temperature (same as inverter temperature)
+
+	amk->temperatureInverter	= WORD_TO_TEMP (frame->data16 [0]);
+	amk->temperatureMotor		= WORD_TO_TEMP (frame->data16 [1]);
+}
+
 int8_t amkReceiveHandler (void* node, CANRxFrame* frame)
 {
 	amkInverter_t* amk = (amkInverter_t*) node;
@@ -327,6 +347,12 @@ int8_t amkReceiveHandler (void* node, CANRxFrame* frame)
 		// Power consumption message.
 		amkHandlePowerConsumption (amk, frame);
 		return POWER_CONSUMPTION_FLAG_POS;
+	}
+	if (id == amk->baseId + TEMPERATURES_ID_OFFSET)
+	{
+		// Temperatures message.
+		amkHandleTemperatures (amk, frame);
+		return TEMPERATURES_FLAG_POS;
 	}
 	else
 	{
