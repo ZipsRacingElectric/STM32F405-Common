@@ -22,22 +22,13 @@ typedef struct
 {
 	/// @brief the 7-bit I2C address of the device
 	i2caddr_t addr;
-	
+
 	/// @brief The I2C bus of the device.
 	I2CDriver* i2c;
 
 	/// @brief The timeout interval of a transaction. Note that if this is less than 20ms, transactions occurring after a write
 	/// operation may fail.
 	sysinterval_t timeout;
-
-	/// @brief as5600 start position register (minimum angle).
-	const uint8_t ZPOS_REG;
-
-	/// @brief as5600 stop position register (maximum angle).
-	const uint8_t MPOS_REG;
-
-	/// @brief Use as5600 ANGLE register not RAW ANGLE register.
-	const uint8_t ANGLE_REG;
 
 	/// @brief as5600 uses 12-bit registers (0 - 4095).
 	uint16_t minAngle;

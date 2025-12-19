@@ -3,6 +3,12 @@
 
 #include "debug.h"
 
+// Constants ------------------------------------------------------------------------------------------------------------------
+
+#define ZPOS_ADDR	0x01
+#define MPOS_ADDR	0x03
+#define ANGLE_ADDR	0x0E
+
 // Functions Prototypes -------------------------------------------------------------------------------------------------------
 
 msg_t write8bit(as5600_t* as5600, uint8_t reg, uint8_t value);
@@ -122,22 +128,22 @@ void setAngleOffset(as5600_t* as5600)
 	uint16_t maxAngle;
 
 	// Read current ZPOS and MPOS register values
-	status = read16bit(as5600, as5600->config->ZPOS_REG, &minAngle);
+	status = read16bit(as5600, ZPOS_ADDR, &minAngle);
 	if (status != MSG_OK) return;
 
-	status = read16bit(as5600, as5600->config->MPOS_REG, &maxAngle);
+	status = read16bit(as5600, MPOS_ADDR, &maxAngle);
 	if (status != MSG_OK) return;
 
 	// Read current angle
-	status = getBinAngle(as5600, as5600->config->ANGLE_REG, &binAngle);
+	status = getBinAngle(as5600, ANGLE_ADDR, &binAngle);
 	if (status != MSG_OK) return;
 
 	// Apply offset
 	minAngle = (minAngle + binAngle) & 0x0FFF;
 	maxAngle = (maxAngle + binAngle) & 0x0FFF;
 
-	setMinAngle(as5600, as5600->config->ZPOS_REG, minAngle);
-	setMaxAngle(as5600, as5600->config->MPOS_REG, maxAngle);
+	setMinAngle(as5600, ZPOS_ADDR, minAngle);
+	setMaxAngle(as5600, MPOS_ADDR, maxAngle);
 }
 
 // Take binAngle, apply scaling to convert to float
@@ -167,7 +173,7 @@ bool as5600Init (as5600_t* as5600, const as5600Config_t* config)
 msg_t as5600Sample(as5600_t* as5600) 
 {
 	uint16_t ADC_SAMPLE;
-	msg_t status = getBinAngle(as5600, as5600->config->ANGLE_REG, &ADC_SAMPLE);
+	msg_t status = getBinAngle(as5600, ANGLE_ADDR, &ADC_SAMPLE);
 	if (status == MSG_OK) 
 	{
 		// If succeed, update the sensor
