@@ -54,7 +54,7 @@ int8_t bmsReceiveHandler (void *node, CANRxFrame *frame)
 	// Identify and handle the message.
 	if (id == STATUS_MESSAGE_ID)
 	{
-		// Cell voltage message.
+		// Status message.
 		bmsHandleStatusMessage (bms, frame);
 		return STATUS_MESSAGE_FLAG_POS;
 	}

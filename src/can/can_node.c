@@ -10,6 +10,7 @@ void canNodeResetTimeout (canNode_t* node);
 void canNodeInit (canNode_t* node, const canNodeConfig_t* config)
 {
 	// Store the configuration
+	// - Note, as most nodes use a temporary configuration, we cannot store a pointer to the config.
 	node->driver			= config->driver;
 	node->receiveHandler	= config->receiveHandler;
 	node->timeoutPeriod		= config->timeoutPeriod;
