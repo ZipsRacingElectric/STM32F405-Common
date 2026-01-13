@@ -3,7 +3,7 @@
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
-#define STATUS_MESSAGE_ID 0x727
+#define STATUS_MESSAGE_ID 0x101
 
 #define STATUS_MESSAGE_FLAG_POS 0x00
 
