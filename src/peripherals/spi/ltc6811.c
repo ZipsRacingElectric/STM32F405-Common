@@ -174,13 +174,6 @@ static uint16_t calculatePec (uint8_t* data, uint8_t dataCount);
 static bool validatePec (uint8_t* data, uint8_t dataCount, uint16_t pec);
 
 /**
- * @brief Wakes up all devices in an LTC6811 daisy chain. This method guarantees all devices are in the ready or standby state,
- * regardless of the previous state of the daisy chain.
- * @param bottom The bottom (first) device in the daisy chain.
- */
-static void wakeupSleep (ltc6811_t* bottom);
-
-/**
  * @brief Blocks until a previously scheduled ADC conversion is completed. Note the SPI peripheral should still be selected
  * from the written ADC command.
  * @param bottom The bottom (first) device in the daisy chain.
@@ -250,36 +243,6 @@ static void failChain (ltc6811_t* bottom);
  */
 static void failGpio (ltc6811_t* bottom);
 
-/**
- * @brief Acquires and starts a daisy chain's SPI driver.
- * @param bottom The bottom (first) device in the chain.
- */
-static inline void start (ltc6811_t* bottom)
-{
-	// Acquire the SPI bus (if enabled)
-	#if SPI_USE_MUTUAL_EXCLUSION
-	spiAcquireBus (bottom->config->spiDriver);
-	#endif // SPI_USE_MUTUAL_EXCLUSION
-
-	// Start the SPI driver
-	spiStart (bottom->config->spiDriver, &bottom->config->spiConfig);
-}
-
-/**
- * @brief Stops and releases a chain's SPI driver.
- * @param bottom The bottom (first) device in the daisy chain.
- */
-static inline void stop (ltc6811_t* bottom)
-{
-	// Stop the SPI driver
-	spiStop (bottom->config->spiDriver);
-
-	// Release the SPI bus (if enabled)
-	#if SPI_USE_MUTUAL_EXCLUSION
-	spiReleaseBus (bottom->config->spiDriver);
-	#endif // SPI_USE_MUTUAL_EXCLUSION
-}
-
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 bool ltc6811Init (ltc6811_t* const* daisyChain, uint16_t deviceCount, const ltc6811Config_t* config)
@@ -322,17 +285,66 @@ bool ltc6811Init (ltc6811_t* const* daisyChain, uint16_t deviceCount, const ltc6
 			daisyChain [index]->gpioSensors [gpio] = config->gpioSensors [index][gpio];
 	}
 
-	if (!ltc6811WriteConfig (daisyChain [0]))
-		return false;
+	ltc6811Start (daisyChain [0]);
+	ltc6811WakeupSleep (daisyChain [0]);
 
-	return ltc6811SampleCells (daisyChain [0]);
+	if (!ltc6811WriteConfig (daisyChain [0]))
+	{
+		ltc6811Stop (daisyChain [0]);
+		return false;
+	}
+
+	ltc6811Stop (daisyChain [0]);
+	return false;
+}
+
+void ltc6811Start (ltc6811_t* bottom)
+{
+	// TODO(Barach): Perform wakeup mode 1?
+
+	// Acquire the SPI bus (if enabled)
+	#if SPI_USE_MUTUAL_EXCLUSION
+	spiAcquireBus (bottom->config->spiDriver);
+	#endif // SPI_USE_MUTUAL_EXCLUSION
+
+	// Start the SPI driver
+	spiStart (bottom->config->spiDriver, &bottom->config->spiConfig);
+}
+
+void ltc6811Stop (ltc6811_t* bottom)
+{
+	// Stop the SPI driver
+	spiStop (bottom->config->spiDriver);
+
+	// Release the SPI bus (if enabled)
+	#if SPI_USE_MUTUAL_EXCLUSION
+	spiReleaseBus (bottom->config->spiDriver);
+	#endif // SPI_USE_MUTUAL_EXCLUSION
+}
+
+void ltc6811WakeupSleep (ltc6811_t* bottom)
+{
+	// Sends a wakeup signal using the algorithm described in "Waking a Daisy Chain - Method 2"
+	// See LTC6811 datasheet, pg.52 for more info.
+
+	// Wake each device individually. If a device in the stack is not in the ready state, it won't propogate the first signal
+	// it receives, rather it will wake up and enter the ready state. Once said device is in the ready state, it will propogate
+	// the next signal it receives. By sending N signals, we are allowing the first N - 1 devices to not propogate the first
+	// signal they receive, in turn guaranteeing that all N devices will receive at least 1 signal.
+	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
+	{
+		// Drive CS low for the maximum wakeup time (guarantees this device will wake).
+		spiSelect (bottom->config->spiDriver);
+		chThdSleep (T_WAKE_MAX);
+
+		// Release CS and allow the device to enter the ready state.
+		spiUnselect (bottom->config->spiDriver);
+		chThdSleep (T_READY_MAX);
+	}
 }
 
 bool ltc6811WriteConfig (ltc6811_t* bottom)
 {
-	start (bottom);
-	wakeupSleep (bottom);
-
 	// Write the configuration register group A
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
@@ -355,53 +367,28 @@ bool ltc6811WriteConfig (ltc6811_t* bottom)
 
 	bool result = writeRegisterGroups (bottom, COMMAND_WRCFGA);
 
-	stop (bottom);
 	return result;
 }
 
 bool ltc6811SampleCells (ltc6811_t* bottom)
 {
-	start (bottom);
-	wakeupSleep (bottom);
-
 	// Sample the cell voltages into the cell voltage buffer.
-	if (!sampleCells (bottom, CELL_VOLTAGE_DESTINATION_VOLTAGE_BUFFER))
-	{
-		stop (bottom);
-		return false;
-	}
-
-	stop (bottom);
-	return true;
+	return sampleCells (bottom, CELL_VOLTAGE_DESTINATION_VOLTAGE_BUFFER);
 }
 
 bool ltc6811SampleStatus (ltc6811_t* bottom)
 {
-	start (bottom);
-	wakeupSleep (bottom);
-
 	// Start the ADC measurement for all values.
 	if (!writeCommand (bottom, COMMAND_ADSTAT (bottom->config->statusAdcMode, 0b000), false))
-	{
-		stop (bottom);
-		failGpio (bottom);
 		return false;
-	}
 
 	// Block until the ADC conversion is complete
 	if (!pollAdc (bottom, STATUS_ADC_MODE_TIMEOUTS [bottom->config->statusAdcMode]))
-	{
-		stop (bottom);
-		failGpio (bottom);
 		return false;
-	}
 
 	// Read the status register group A.
 	if (!readRegisterGroups (bottom, COMMAND_RDSTATA))
-	{
-		stop (bottom);
 		return false;
-	}
 
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
@@ -412,21 +399,14 @@ bool ltc6811SampleStatus (ltc6811_t* bottom)
 		device->dieTemperature = STAR2_3_ITMP (device->rx [2], device->rx [3]);
 	}
 
-	stop (bottom);
 	return true;
 }
 
 bool ltc6811SampleCellVoltageFaults (ltc6811_t* bottom)
 {
-	start (bottom);
-	wakeupSleep (bottom);
-
 	// Read the status register group B.
 	if (!readRegisterGroups (bottom, COMMAND_RDSTATB))
-	{
-		stop (bottom);
 		return false;
-	}
 
 	// Read each device's undervoltage / overvoltage flags.
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
@@ -462,7 +442,6 @@ bool ltc6811SampleCellVoltageFaults (ltc6811_t* bottom)
 		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 11, STBR4_C12OV (device->rx [4]));
 	}
 
-	stop (bottom);
 	return true;
 }
 
@@ -470,13 +449,9 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 {
 	// See LTC6811 datasheet section "Auxiliary (GPIO) Measurements (ADAX Command)", pg.26.
 
-	start (bottom);
-	wakeupSleep (bottom);
-
 	// Start the ADC measurement for all GPIO.
 	if (!writeCommand (bottom, COMMAND_ADAX (bottom->config->gpioAdcMode, 0b000), false))
 	{
-		stop (bottom);
 		failGpio (bottom);
 		return false;
 	}
@@ -484,7 +459,6 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 	// Block until the ADC conversion is complete
 	if (!pollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->gpioAdcMode]))
 	{
-		stop (bottom);
 		failGpio (bottom);
 		return false;
 	}
@@ -492,7 +466,6 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 	// Read the auxiliary register group B
 	if (!readRegisterGroups (bottom, COMMAND_RDAUXB))
 	{
-		stop (bottom);
 		failGpio (bottom);
 		return false;
 	}
@@ -519,7 +492,6 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 	// Read the auxiliary register group A
 	if (!readRegisterGroups (bottom, COMMAND_RDAUXA))
 	{
-		stop (bottom);
 		failGpio (bottom);
 		return false;
 	}
@@ -540,7 +512,6 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 		}
 	}
 
-	stop (bottom);
 	return true;
 }
 
@@ -548,60 +519,37 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 {
 	// See LTC6811 datasheet section "Open Wire Check (ADOW Command)", pg.34.
 
-	start (bottom);
-	wakeupSleep (bottom);
-
 	// Pull-up measurement
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-up command.
 		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, true), false))
-		{
-			stop (bottom);
 			return false;
-		}
 
 		// Block until complete.
 		if (!pollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
-		{
-			stop (bottom);
 			return false;
-		}
 	}
 
 	// Sample the cell voltages into the pull-up buffer.
 	if (!sampleCells (bottom, CELL_VOLTAGE_DESTINATION_PULLUP_BUFFER))
-	{
-		stop (bottom);
 		return false;
-	}
 
 	// Pull-down measurement
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-down command.
 		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, false), false))
-		{
-			stop (bottom);
 			return false;
-		}
 
 		// Block until complete.
 		if (!pollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
-		{
-			stop (bottom);
 			return false;
-		}
 	}
 
 	// Sample the cell voltages into the pull-down buffer.
 	if (!sampleCells (bottom, CELL_VOLTAGE_DESTINATION_PULLDOWN_BUFFER))
-	{
-		stop (bottom);
 		return false;
-	}
-
-	stop (bottom);
 
 	// Check each device, cell-by-cell
 	// Note that in the datasheet, sense wires are indexed 0 to 12 while cells are indexed 1 to 12.
@@ -659,27 +607,6 @@ bool validatePec (uint8_t* data, uint8_t dataCount, uint16_t pec)
 	// TODO(Barach): There is probably a more efficient way to validate this.
 	uint16_t actualPec = calculatePec (data, dataCount);
 	return pec == actualPec;
-}
-
-void wakeupSleep (ltc6811_t* bottom)
-{
-	// Sends a wakeup signal using the algorithm described in "Waking a Daisy Chain - Method 2"
-	// See LTC6811 datasheet, pg.52 for more info.
-
-	// Wake each device individually. If a device in the stack is not in the ready state, it won't propogate the first signal
-	// it receives, rather it will wake up and enter the ready state. Once said device is in the ready state, it will propogate
-	// the next signal it receives. By sending N signals, we are allowing the first N - 1 devices to not propogate the first
-	// signal they receive, in turn guaranteeing that all N devices will receive at least 1 signal.
-	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-	{
-		// Drive CS low for the maximum wakeup time (guarantees this device will wake).
-		spiSelect (bottom->config->spiDriver);
-		chThdSleep (T_WAKE_MAX);
-
-		// Release CS and allow the device to enter the ready state.
-		spiUnselect (bottom->config->spiDriver);
-		chThdSleep (T_READY_MAX);
-	}
 }
 
 bool pollAdc (ltc6811_t* bottom, sysinterval_t timeout)

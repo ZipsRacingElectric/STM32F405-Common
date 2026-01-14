@@ -183,8 +183,29 @@ typedef struct ltc6811 ltc6811_t;
 bool ltc6811Init (ltc6811_t* const* daisyChain, uint16_t deviceCount, const ltc6811Config_t* config);
 
 /**
+ * @brief Acquires and starts a daisy chain's SPI driver.
+ * @param bottom The bottom (first) device in the chain.
+ */
+void ltc6811Start (ltc6811_t* bottom);
+
+/**
+ * @brief Stops and releases a chain's SPI driver.
+ * @param bottom The bottom (first) device in the daisy chain.
+ */
+void ltc6811Stop (ltc6811_t* bottom);
+
+/**
+ * @brief Wakes up all devices in an LTC6811 daisy chain. This method guarantees all devices are in the ready or standby state,
+ * regardless of the previous state of the daisy chain.
+ * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
+ * @param bottom The bottom (first) device in the daisy chain.
+ */
+void ltc6811WakeupSleep (ltc6811_t* bottom);
+
+/**
  * @brief Writes the configuration to each device in a daisy chain. The configuration includes @c cellVoltageMin ,
  * @c cellVoltageMax , @c dischargeTimeout, and the @c cellsDischarging arrays.
+ * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
  * @param bottom The bottom (first) device in the stack.
  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all writes were successful,
  * simply that they didn't all fail.
@@ -193,6 +214,7 @@ bool ltc6811WriteConfig (ltc6811_t* bottom);
 
 /**
  * @brief Samples the cell voltages of all devices in a daisy chain.
+ * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
  * @param bottom The bottom (first) device in the stack.
  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
  * check individual device states to determine so.
@@ -201,6 +223,7 @@ bool ltc6811SampleCells (ltc6811_t* bottom);
 
 /**
  * @brief Samples the die temperature and sum of cells measurements.
+ * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
  * @param bottom The bottom (first) device in the stack.
  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
  * check individual device states to determine so.
@@ -209,7 +232,7 @@ bool ltc6811SampleStatus (ltc6811_t* bottom);
 
 /**
  * @brief Checks the undervoltage / overvoltage conditions of all devices in a daisy chain.
- * @note This can only be done after a call to @c ltc6811SampleCells
+ * @note This can only be done after a call to @c ltc6811SampleCells and before a call to @c ltc6811Stop .
  * @param bottom The bottom (first) device in the stack.
  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
  * check individual device states to determine so.
@@ -218,6 +241,7 @@ bool ltc6811SampleCellVoltageFaults (ltc6811_t* bottom);
 
 /**
  * @brief Samples the GPIO voltages of all devices in a daisy chain.
+ * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
  * @param bottom The bottom (first) device in the stack.
  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
  * check individual sensor states to determine so.
@@ -226,6 +250,7 @@ bool ltc6811SampleGpio (ltc6811_t* bottom);
 
 /**
  * @brief Performs an open-wire test on all devices in a daisy chain.
+ * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
  * @param bottom The bottom (first) device in the stack.
  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
  * check individual device states to determine so.
