@@ -121,6 +121,9 @@ typedef struct
 	/// @brief The maximum plausible cell voltage measurement, any higher indicates an overvoltage condition.
 	float cellVoltageMax;
 
+	/// @brief The amount of time an operation is allowed to run over its expected execution time by.
+	sysinterval_t pollTolerance;
+
 	/// @brief Multidimensional array of analog sensors to call upon sampling each device's GPIO. Must be size
 	/// [ @c deviceCount ][ @c LTC6811_GPIO_COUNT ].
 	analogSensor_t* gpioSensors [][LTC6811_GPIO_COUNT];

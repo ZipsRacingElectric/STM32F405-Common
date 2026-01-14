@@ -613,7 +613,7 @@ bool pollAdc (ltc6811_t* bottom, sysinterval_t timeout)
 {
 	// Get the expiration deadline
 	systime_t timeStart = chVTGetSystemTimeX ();
-	systime_t timeDeadline = chTimeAddX (timeStart, timeout);
+	systime_t timeDeadline = chTimeAddX (timeStart, timeout + bottom->config->pollTolerance);
 
 	// Toggle the clock line until the bottom device shifts out a '1'. The value transmitted does not matter, just that the
 	// clock line is being toggled.
@@ -685,26 +685,14 @@ bool writeRegisterGroups (ltc6811_t* bottom, uint16_t command)
 	// -------------------------------------------------------------------------
 	// Where bytes [12, 19] are repeated down to device 0.
 
-	// Write the command word followed by the PEC word.
-	uint8_t tx [sizeof (uint16_t) * 2] = { command >> 8, command };
-	uint16_t pec = calculatePec (tx, 2);
-	tx [2] = pec >> 8;
-	tx [3] = pec;
-
-	spiSelect (bottom->config->spiDriver);
-
-	if (spiExchange (bottom->config->spiDriver, sizeof (tx), tx, nullBuffer) != MSG_OK)
-	{
-		spiUnselect (bottom->config->spiDriver);
-		failChain (bottom);
+	if (!writeCommand (bottom, command, false))
 		return false;
-	}
 
 	// Write each individual device's register group.
 	// Note the first written data goes to the last device in the stack (device N-1).
 	for (ltc6811_t* device = bottom->topDevice; device != NULL; device = device->lowerDevice)
 	{
-		pec = calculatePec (device->tx, LTC6811_BUFFER_SIZE - sizeof(uint16_t));
+		uint16_t pec = calculatePec (device->tx, LTC6811_BUFFER_SIZE - sizeof(uint16_t));
 		device->tx [LTC6811_BUFFER_SIZE - 2] = pec >> 8;
 		device->tx [LTC6811_BUFFER_SIZE - 1] = pec;
 
@@ -746,24 +734,8 @@ bool readRegisterGroups (ltc6811_t* bottom, uint16_t command)
 
 	for (uint16_t attempt = 0; attempt < bottom->config->readAttemptCount; ++attempt)
 	{
-		// TODO(Barach): The control of this is messy.
-
-		// Write the command word followed by the PEC word.
-		uint8_t tx [sizeof (uint16_t) * 2] = { command >> 8, command };
-		uint16_t pec = calculatePec (tx, 2);
-		tx [2] = pec >> 8;
-		tx [3] = pec;
-
-		spiSelect (bottom->config->spiDriver);
-
-		// TODO(Barach): Null buffer is nonreentrant?
-		if (spiExchange (bottom->config->spiDriver, sizeof (tx), tx, nullBuffer) != MSG_OK)
-		{
-			// If a SPI error occurs, something has failed inside the STM, re-attempting will not help.
-			spiUnselect (bottom->config->spiDriver);
-			failChain (bottom);
+		if (!writeCommand (bottom, command, false))
 			return false;
-		}
 
 		// Read each individual device's register group.
 		// Note the first read data comes from the first device in the stack (device 0).
@@ -782,13 +754,15 @@ bool readRegisterGroups (ltc6811_t* bottom, uint16_t command)
 		spiUnselect (bottom->config->spiDriver);
 
 		// Validate the PEC of each device's frame.
+		bool valid = true;
 		for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 		{
-			pec = device->rx [LTC6811_BUFFER_SIZE - 1] | (device->rx [LTC6811_BUFFER_SIZE - 2] << 8);
+			uint16_t pec = device->rx [LTC6811_BUFFER_SIZE - 1] | (device->rx [LTC6811_BUFFER_SIZE - 2] << 8);
 
 			if (!validatePec (device->rx, LTC6811_BUFFER_SIZE - sizeof (uint16_t), pec))
 			{
 				// If this is not the last attempt, re-attempt the entire operation.
+				valid = false;
 				if (attempt != bottom->config->readAttemptCount - 1)
 					break;
 
@@ -796,6 +770,8 @@ bool readRegisterGroups (ltc6811_t* bottom, uint16_t command)
 				device->state = LTC6811_STATE_PEC_ERROR;
 			}
 		}
+		if (valid)
+			return true;
 	}
 
 	return true;
