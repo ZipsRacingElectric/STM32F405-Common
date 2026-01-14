@@ -11,6 +11,9 @@
 // Note: This code is derivative of the Analog Devices Linduino codebase:
 //   https://github.com/analogdevicesinc/Linduino/tree/master.
 //
+// TODO(Barach): Remove extra cell voltage buffers?
+// TODO(Barach): No need to wake chain every operation
+// TODO(Barach): Reading 5x the data required.
 // TODO(Barach): Combined GPIO and cell voltage command exists.
 // TODO(Barach): Mux self test.
 
@@ -85,9 +88,6 @@ typedef struct
 
 	/// @brief The SPI configuration of the daisy chain.
 	SPIConfig spiConfig;
-
-	/// @brief The MISO line of the SPI bus.
-	ioline_t spiMiso;
 
 	/// @brief The number of times to attempt a read operation before failing.
 	uint16_t readAttemptCount;

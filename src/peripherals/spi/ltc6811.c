@@ -181,9 +181,10 @@ static bool validatePec (uint8_t* data, uint8_t dataCount, uint16_t pec);
 static void wakeupSleep (ltc6811_t* bottom);
 
 /**
- * @brief Blocks until a previously scheduled ADC conversion is completed.
+ * @brief Blocks until a previously scheduled ADC conversion is completed. Note the SPI peripheral should still be selected
+ * from the written ADC command.
  * @param bottom The bottom (first) device in the daisy chain.
- * @return True if all device conversions are complete, false if a timeout occurred. Timeouts may be considered a fatal error.
+ * @return True if all device conversions are complete, false if a timeout occurred. Timeouts are considered a fatal error.
  */
 static bool pollAdc (ltc6811_t* bottom, sysinterval_t timeout);
 
@@ -191,9 +192,12 @@ static bool pollAdc (ltc6811_t* bottom, sysinterval_t timeout);
  * @brief Writes a command to each device in a chain.
  * @param bottom The bottom (first) device in the daisy chain.
  * @param command The command to write.
- * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not guarantee write success.
+ * @param unselect Indicates whether to unselect the SPI peripheral or not. If @c false , the caller is responsible for
+ * calling @c spiUnselect
+ * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not guarantee write success. Note the
+ * SPI peripheral is automatically unselected on failure.
  */
-static bool writeCommand (ltc6811_t* bottom, uint16_t command);
+static bool writeCommand (ltc6811_t* bottom, uint16_t command, bool unselect);
 
 /**
  * @brief Writes to a data register group of each device in a chain.
@@ -332,8 +336,8 @@ bool ltc6811WriteConfig (ltc6811_t* bottom)
 	// Write the configuration register group A
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
-		// GPIO set to high impedence, reference disabled outside conversion, ADC option 0.
-		device->tx [0] = CFGR0 (1, 1, 1, 1, 1, 0, 0);
+		// GPIO set to high impedence, reference enabled outside conversion, ADC option 0.
+		device->tx [0] = CFGR0 (1, 1, 1, 1, 1, 1, 0);
 
 		// Undervoltage / overvoltage values.
 		device->tx [1] = CFGR1 (bottom->config->cellVoltageMin);
@@ -377,7 +381,7 @@ bool ltc6811SampleStatus (ltc6811_t* bottom)
 	wakeupSleep (bottom);
 
 	// Start the ADC measurement for all values.
-	if (!writeCommand (bottom, COMMAND_ADSTAT (bottom->config->statusAdcMode, 0b000)))
+	if (!writeCommand (bottom, COMMAND_ADSTAT (bottom->config->statusAdcMode, 0b000), false))
 	{
 		stop (bottom);
 		failGpio (bottom);
@@ -470,7 +474,7 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 	wakeupSleep (bottom);
 
 	// Start the ADC measurement for all GPIO.
-	if (!writeCommand (bottom, COMMAND_ADAX (bottom->config->gpioAdcMode, 0b000)))
+	if (!writeCommand (bottom, COMMAND_ADAX (bottom->config->gpioAdcMode, 0b000), false))
 	{
 		stop (bottom);
 		failGpio (bottom);
@@ -551,7 +555,7 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-up command.
-		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, true)))
+		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, true), false))
 		{
 			stop (bottom);
 			return false;
@@ -576,7 +580,7 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-down command.
-		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, false)))
+		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, false), false))
 		{
 			stop (bottom);
 			return false;
@@ -680,45 +684,35 @@ void wakeupSleep (ltc6811_t* bottom)
 
 bool pollAdc (ltc6811_t* bottom, sysinterval_t timeout)
 {
-	// TODO(Barach): This should use the writeCommand function.
+	// Get the expiration deadline
+	systime_t timeStart = chVTGetSystemTimeX ();
+	systime_t timeDeadline = chTimeAddX (timeStart, timeout);
 
-	// Write the command word followed by the PEC word.
-	uint8_t tx [sizeof (uint16_t) * 2] = { COMMAND_PLADC >> 8, (uint8_t) COMMAND_PLADC };
-	uint16_t pec = calculatePec (tx, 2);
-	tx [2] = pec >> 8;
-	tx [3] = pec;
+	// Toggle the clock line until the bottom device shifts out a '1'. The value transmitted does not matter, just that the
+	// clock line is being toggled.
+	uint8_t txByte [1] = { 0xFF };
+	uint8_t rxByte [1] = { 0x00 };
 
-	spiSelect (bottom->config->spiDriver);
-
-	if (spiExchange (bottom->config->spiDriver, sizeof (tx), tx, nullBuffer) != MSG_OK)
+	systime_t timeCurrent = timeStart;
+	while (chTimeIsInRangeX (timeCurrent, timeStart, timeDeadline))
 	{
-		spiUnselect (bottom->config->spiDriver);
-		return false;
+		spiExchange (bottom->config->spiDriver, sizeof (uint8_t), txByte, rxByte);
+		if (rxByte [0] != 0)
+		{
+			// Non-zero read, success.
+			spiUnselect (bottom->config->spiDriver);
+			return true;
+		}
+		timeCurrent = chVTGetSystemTimeX ();
 	}
 
-	// If the conversion has already finished, exit early.
-	if (palReadLine (bottom->config->spiMiso))
-	{
-		spiUnselect (bottom->config->spiDriver);
-		return true;
-	}
-
-	// Wait for the conversion to finish.
-	// palEnableLineEvent (chain->config->spiMiso, PAL_EVENT_MODE_RISING_EDGE);
-	// palWaitLineTimeout (chain->config->spiMiso, timeout);
-	// palDisableLineEvent (chain->config->spiMiso);
-
-	// TODO(Barach): Polling isn't working
-	chThdSleep (timeout);
-	return true;
-
-	// // If conversion is finished, success, otherwise failed.
-	// bool result = palReadLine (chain->config->spiMiso);
-	// spiUnselect (chain->config->spiDriver);
-	// return result;
+	// No response before expiration, fail the chain.
+	failChain (bottom);
+	spiUnselect (bottom->config->spiDriver);
+	return false;
 }
 
-bool writeCommand (ltc6811_t* bottom, uint16_t command)
+bool writeCommand (ltc6811_t* bottom, uint16_t command, bool unselect)
 {
 	// Transmit Frame:
 	//  0            1            2        3
@@ -741,7 +735,8 @@ bool writeCommand (ltc6811_t* bottom, uint16_t command)
 		return false;
 	}
 
-	spiUnselect (bottom->config->spiDriver);
+	if (unselect)
+		spiUnselect (bottom->config->spiDriver);
 
 	return true;
 }
@@ -884,7 +879,7 @@ bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)
 	// See LTC6811 datasheet section "Measuring Cell Voltages (ADCV Command)", pg.25.
 
 	// Start the cell voltage conversion for all cells, conditionally permitting discharge.
-	if (!writeCommand (bottom, COMMAND_ADCV (bottom->config->cellAdcMode, bottom->dischargeAllowed, 0b000)))
+	if (!writeCommand (bottom, COMMAND_ADCV (bottom->config->cellAdcMode, bottom->dischargeAllowed, 0b000), false))
 		return false;
 
 	if (!pollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
