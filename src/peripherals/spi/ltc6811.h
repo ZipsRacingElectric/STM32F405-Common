@@ -111,16 +111,6 @@ typedef struct
 	/// determined through testing, but cannot be less than 2. Recommended value of 4.
 	uint8_t openWireTestIterations;
 
-	/// @brief The maximum number of consecutive faulted measurements before an actual fault is registered. This value should
-	/// be determined through testing. Note this does not apply to IsoSPI faults.
-	uint16_t faultCount;
-
-	/// @brief The minimum plausible cell voltage measurement, any lower indicates an undervoltage condition.
-	float cellVoltageMin;
-
-	/// @brief The maximum plausible cell voltage measurement, any higher indicates an overvoltage condition.
-	float cellVoltageMax;
-
 	/// @brief The amount of time an operation is allowed to run over its expected execution time by.
 	sysinterval_t pollTolerance;
 
@@ -159,12 +149,7 @@ struct ltc6811
 	bool cellsDischarging [LTC6811_CELL_COUNT];
 
 	// Fault conditions
-	bool overvoltageFaults [LTC6811_CELL_COUNT];
-	uint16_t overvoltageCounters [LTC6811_CELL_COUNT];
-	bool undervoltageFaults [LTC6811_CELL_COUNT];
-	uint16_t undervoltageCounters [LTC6811_CELL_COUNT];
 	bool openWireFaults [LTC6811_WIRE_COUNT];
-	uint16_t openWireCounters [LTC6811_WIRE_COUNT];
 
 	// Internal
 	uint8_t tx [LTC6811_BUFFER_SIZE];
@@ -234,15 +219,6 @@ bool ltc6811SampleCells (ltc6811_t* bottom);
 bool ltc6811SampleStatus (ltc6811_t* bottom);
 
 /**
- * @brief Checks the undervoltage / overvoltage conditions of all devices in a daisy chain.
- * @note This can only be done after a call to @c ltc6811SampleCells and before a call to @c ltc6811Stop .
- * @param bottom The bottom (first) device in the stack.
- * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
- * check individual device states to determine so.
- */
-bool ltc6811SampleCellVoltageFaults (ltc6811_t* bottom);
-
-/**
  * @brief Samples the GPIO voltages of all devices in a daisy chain.
  * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
  * @param bottom The bottom (first) device in the stack.
@@ -265,36 +241,6 @@ static inline void ltc6811ClearState (ltc6811_t* bottom)
 {
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 		device->state = LTC6811_STATE_READY;
-}
-
-/// @brief Checks whether any device in a daisy chain has an undervoltage fault present.
-static inline bool ltc6811UndervoltageFault (ltc6811_t* bottom)
-{
-	bool fault = false;
-	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-		for (uint8_t cell = 0; cell < LTC6811_CELL_COUNT; ++cell)
-			fault |= device->undervoltageFaults [cell];
-	return fault;
-}
-
-/// @brief Checks whether any device in a daisy chain has an overvoltage fault present.
-static inline bool ltc6811OvervoltageFault (ltc6811_t* bottom)
-{
-	bool fault = false;
-	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-		for (uint8_t cell = 0; cell < LTC6811_CELL_COUNT; ++cell)
-			fault |= device->overvoltageFaults [cell];
-	return fault;
-}
-
-/// @brief Checks whether any device in a daisy chain has an open-wire fault present.
-static inline bool ltc6811OpenWireFault (ltc6811_t* bottom)
-{
-	bool fault = false;
-	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-		for (uint8_t wire = 0; wire < LTC6811_WIRE_COUNT; ++wire)
-			fault |= device->openWireFaults [wire];
-	return fault;
 }
 
 /// @brief Checks whether any device in a daisy chain has an IsoSPI fault present.

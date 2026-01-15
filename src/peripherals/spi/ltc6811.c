@@ -221,16 +221,6 @@ static bool readRegisterGroups (ltc6811_t* bottom, uint16_t command);
 static bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination);
 
 /**
- * @brief Updates a fault flag and counter based on a current fault state.
- * @param bottom The bottom (first) device in the daisy chain.
- * @param flags The array of fault flags (ex. @c undervoltageFaults ).
- * @param counters The array of fault counters (ex. @c undervoltageCounters ).
- * @param index The index of the fault within the @c flags & @c counters arrays .
- * @param faulted Whether the current reading is faulted or not.
- */
-static void setFault (ltc6811_t* bottom, bool* flags, uint16_t* counters, uint8_t index, bool faulted);
-
-/**
  * @brief Sets all devices in a chain to the @c LTC6811_STATE_FAILED state.
  * @param bottom The bottom (first) device in the daisy chain.
  */
@@ -270,15 +260,11 @@ bool ltc6811Init (ltc6811_t* const* daisyChain, uint16_t deviceCount, const ltc6
 			// Set all cells to default
 			daisyChain [index]->cellVoltages [cell] = 0.0f;
 			daisyChain [index]->cellsDischarging [cell] = false;
-
-			// Reset the cell faults.
-			daisyChain [index]->overvoltageCounters [cell] = 0;
-			daisyChain [index]->undervoltageCounters [cell] = 0;
 		}
 
 		// Reset the wire faults.
 		for (uint16_t wire = 0; wire < LTC6811_WIRE_COUNT; ++wire)
-			daisyChain [index]->openWireCounters [wire] = 0;
+			daisyChain [index]->openWireFaults [wire] = false;
 
 		// TODO(Barach): Not a huge fan of this.
 		for (uint8_t gpio = 0; gpio < LTC6811_GPIO_COUNT; ++gpio)
@@ -351,11 +337,6 @@ bool ltc6811WriteConfig (ltc6811_t* bottom)
 		// GPIO set to high impedence, reference enabled outside conversion, ADC option 0.
 		device->tx [0] = CFGR0 (1, 1, 1, 1, 1, 1, 0);
 
-		// Undervoltage / overvoltage values.
-		device->tx [1] = CFGR1 (bottom->config->cellVoltageMin);
-		device->tx [2] = CFGR2 (bottom->config->cellVoltageMin, bottom->config->cellVoltageMax);
-		device->tx [3] = CFGR3 (bottom->config->cellVoltageMax);
-
 		// Cells to discharge and discharge timeout.
 		device->tx [4] = CFGR4 (device->cellsDischarging [7], device->cellsDischarging [6],
 			device->cellsDischarging [5], device->cellsDischarging [4], device->cellsDischarging [3],
@@ -397,49 +378,6 @@ bool ltc6811SampleStatus (ltc6811_t* bottom)
 
 		// Read the die temperature.
 		device->dieTemperature = STAR2_3_ITMP (device->rx [2], device->rx [3]);
-	}
-
-	return true;
-}
-
-bool ltc6811SampleCellVoltageFaults (ltc6811_t* bottom)
-{
-	// Read the status register group B.
-	if (!readRegisterGroups (bottom, COMMAND_RDSTATB))
-		return false;
-
-	// Read each device's undervoltage / overvoltage flags.
-	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-	{
-		// STBR2
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 0, STBR2_C1UV (device->rx [2]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 1, STBR2_C2UV (device->rx [2]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 2, STBR2_C3UV (device->rx [2]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 3, STBR2_C4UV (device->rx [2]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 0, STBR2_C1OV (device->rx [2]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 1, STBR2_C2OV (device->rx [2]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 2, STBR2_C3OV (device->rx [2]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 3, STBR2_C4OV (device->rx [2]));
-
-		// STBR3
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 4, STBR3_C5UV (device->rx [3]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 5, STBR3_C6UV (device->rx [3]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 6, STBR3_C7UV (device->rx [3]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 7, STBR3_C8UV (device->rx [3]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 4, STBR3_C5OV (device->rx [3]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 5, STBR3_C6OV (device->rx [3]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 6, STBR3_C7OV (device->rx [3]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 7, STBR3_C8OV (device->rx [3]));
-
-		// STBR4
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 8, STBR4_C9UV (device->rx [4]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 9, STBR4_C10UV (device->rx [4]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 10, STBR4_C11UV (device->rx [4]));
-		setFault (bottom, device->undervoltageFaults, device->undervoltageCounters, 11, STBR4_C12UV (device->rx [4]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 8, STBR4_C9OV (device->rx [4]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 9, STBR4_C10OV (device->rx [4]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 10, STBR4_C11OV (device->rx [4]));
-		setFault (bottom, device->overvoltageFaults, device->overvoltageCounters, 11, STBR4_C12OV (device->rx [4]));
 	}
 
 	return true;
@@ -556,26 +494,22 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
 		// For wire 0, if cell 1 read 0V (1mV tolerance for noise) during pull-up, the wire is open.
-		setFault (bottom, device->openWireFaults, device->openWireCounters, 0,
-			device->cellVoltagesPullup [0] < 0.001f && device->cellVoltagesPullup [0] > -0.001f);
+		device->openWireFaults [0] = device->cellVoltagesPullup [0] < 0.001f && device->cellVoltagesPullup [0] > -0.001f;
 
 		// For wire n in [1 to 11], if cell delta (n+1) < -400mV, the wire is open.
 		for (uint8_t wire = 1; wire < LTC6811_CELL_COUNT - 1; ++wire)
 		{
 			device->cellVoltagesDelta [wire] = device->cellVoltagesPullup [wire] - device->cellVoltagesPulldown [wire];
-			setFault (bottom, device->openWireFaults, device->openWireCounters, wire,
-				device->cellVoltagesDelta [wire] < -0.4f);
+			device->openWireFaults [wire] = device->cellVoltagesDelta [wire] < -0.4f;
 		}
 
 		// TODO(Barach): The datasheet calls out 400mV, but testing shows it as 800mV. Figure out why.
 		// For wire 11, if cell delta 12 < -800mV, the wire is open.
 		device->cellVoltagesDelta [11] = device->cellVoltagesPullup [11] - device->cellVoltagesPulldown [11];
-		setFault (bottom, device->openWireFaults, device->openWireCounters, 11,
-			device->cellVoltagesDelta [11] < -0.8f);
+		device->openWireFaults [11] = device->cellVoltagesDelta [11] < -0.8f;
 
 		// For wire 12, if cell 12 read 0V (1mV tolerance for noise) during pull-down, the wire is open.
-		setFault (bottom, device->openWireFaults, device->openWireCounters, 12,
-			device->cellVoltagesPulldown [11] < 0.001f && device->cellVoltagesPulldown [11] > -0.001f);
+		device->openWireFaults [12] = device->cellVoltagesPulldown [11] < 0.001f && device->cellVoltagesPulldown [11] > -0.001f;
 	}
 
 	return true;
@@ -905,29 +839,6 @@ bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)
 	}
 
 	return true;
-}
-
-void setFault (ltc6811_t* bottom, bool* flags, uint16_t* counters, uint8_t index, bool faulted)
-{
-	if (faulted)
-	{
-		if (counters [index] < bottom->config->faultCount)
-		{
-			// If the counter hasn't filled yet, increment it.
-			++(counters [index]);
-		}
-		else
-		{
-			// If the counter is filled, set the flag.
-			flags [index] = true;
-		}
-	}
-	else
-	{
-		// If no fault is present, reset both the flag and counter.
-		counters [index] = 0;
-		flags [index] = false;
-	}
 }
 
 void failChain (ltc6811_t* bottom)
