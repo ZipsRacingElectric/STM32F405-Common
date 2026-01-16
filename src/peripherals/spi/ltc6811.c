@@ -329,6 +329,23 @@ void ltc6811WakeupSleep (ltc6811_t* bottom)
 	}
 }
 
+void ltc6811WakeupIdle (ltc6811_t* bottom)
+{
+	// Sends a wakeup signal using the algorithm described in "Waking a Daisy Chain - Method 1"
+	// See LTC6811 datasheet, pg.52 for more info.
+
+	// Get the number of devices in the daisy chain.
+	uint16_t count = 0;
+	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
+		++count;
+
+	// Pulse the CS line for a duration of T_READY, then wait for T_READY * N.
+	spiSelect (bottom->config->spiDriver);
+	chThdSleepMicroseconds (T_READY_MAX);
+	spiUnselect (bottom->config->spiDriver);
+	chThdSleepMicroseconds (T_READY_MAX * count);
+}
+
 bool ltc6811WriteConfig (ltc6811_t* bottom)
 {
 	// Write the configuration register group A
@@ -708,7 +725,7 @@ bool readRegisterGroups (ltc6811_t* bottom, uint16_t command)
 			return true;
 	}
 
-	return true;
+	return false;
 }
 
 bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)

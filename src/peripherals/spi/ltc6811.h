@@ -183,12 +183,21 @@ void ltc6811Start (ltc6811_t* bottom);
 void ltc6811Stop (ltc6811_t* bottom);
 
 /**
- * @brief Wakes up all devices in an LTC6811 daisy chain. This method guarantees all devices are in the ready or standby state,
- * regardless of the previous state of the daisy chain.
+ * @brief Wakes up all devices in an LTC6811 daisy chain from the sleep state. This method guarantees all devices are in the
+ * standby state, regardless of the previous state of the daisy chain. The LTC6811 core enters the sleep state after 2 seconds
+ * of inactivity.
  * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
  * @param bottom The bottom (first) device in the daisy chain.
  */
 void ltc6811WakeupSleep (ltc6811_t* bottom);
+
+/**
+ * @brief Wakes up all devices in an LTC6811 daisy chain from the idle state. This method guarantees all devices are in the
+ * ready state. The LTC6811 ISOspi port enters the idle state after 4.3 ms of inactivity.
+ * @note Must be called between @c ltc6811Start and @c ltc6811Stop .
+ * @param bottom The bottom (first) device in the daisy chain.
+ */
+void ltc6811WakeupIdle (ltc6811_t* bottom);
 
 /**
  * @brief Writes the configuration to each device in a daisy chain. The configuration includes @c cellVoltageMin ,
