@@ -113,10 +113,6 @@ typedef struct
 
 	/// @brief The amount of time an operation is allowed to run over its expected execution time by.
 	sysinterval_t pollTolerance;
-
-	/// @brief Multidimensional array of analog sensors to call upon sampling each device's GPIO. Must be size
-	/// [ @c deviceCount ][ @c LTC6811_GPIO_COUNT ].
-	analogSensor_t* gpioSensors [][LTC6811_GPIO_COUNT];
 } ltc6811Config_t;
 
 struct ltc6811
@@ -124,11 +120,11 @@ struct ltc6811
 	// Doubly-linked list references.
 	struct ltc6811* upperDevice;
 	struct ltc6811* lowerDevice;
-	struct ltc6811* topDevice;
 
-	// Daisy chain configuration
+	// Bottom device configuration (uninitialized for all other devices).
+	struct ltc6811* topDevice;
 	const ltc6811Config_t* config;
-	bool dischargeAllowed;
+	uint16_t deviceCount;
 
 	// Per-device configuration
 	analogSensor_t* gpioSensors [LTC6811_GPIO_COUNT];
@@ -160,15 +156,39 @@ typedef struct ltc6811 ltc6811_t;
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 /**
- * @brief Initializes all devices in a daisy chain.
- * @param daisyChain Array of @c ltc6811_t* indicating the order of devices in the chain. The first element indicates the
- * bottom (first) device in the stack.
- * @param deviceCount The number of elements in @c daisyChain .
+ * @brief Initializes the bottom device of an LTC daisy chain.
+ * @note This does not test the device communication, and therefore cannot fail. See @c ltc6811FinalizeChain to test the
+ * device.
+ * @param bottom The bottom (first) device in the stack.
  * @param config The configuration of the chain.
+ */
+void ltc6811StartChain (ltc6811_t* bottom, const ltc6811Config_t* config);
+
+/**
+ * @brief Initializes and appends an LTC to the end of an LTC daisy chain.
+ * @note This does not test the device communication, and therefore cannot fail. See @c ltc6811FinalizeChain to test the
+ * device.
+ * @param bottom The bottom (first) device in the stack.
+ * @param ltc The LTC to initialize and append.
+ */
+void ltc6811AppendChain (ltc6811_t* bottom, ltc6811_t* ltc);
+
+/**
+ * @brief Finalizes modifications to an LTC daisy chain made by @c ltc6811StartChain and @c ltc6811AppendChain . This function
+ * performs the final configuration and tests all device communications.
+ * @param bottom The bottom (first) device in the stack.
  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean that all devices are
  * functional, simply that communication may be attempted.
  */
-bool ltc6811Init (ltc6811_t* const* daisyChain, uint16_t deviceCount, const ltc6811Config_t* config);
+bool ltc6811FinalizeChain (ltc6811_t* bottom);
+
+/**
+ * @brief Links an analog sensor to the callback of an LTC's GPIO ADC.
+ * @param ltc The LTC to link the sensor to.
+ * @param index The index of the GPIO to link to.
+ * @param sensor The analog sensor to link.
+ */
+void ltc6811SetGpioSensor (ltc6811_t* ltc, uint8_t index, analogSensor_t* sensor);
 
 /**
  * @brief Acquires and starts a daisy chain's SPI driver.

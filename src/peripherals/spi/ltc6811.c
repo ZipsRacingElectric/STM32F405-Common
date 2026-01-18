@@ -235,53 +235,66 @@ static void failGpio (ltc6811_t* bottom);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool ltc6811Init (ltc6811_t* const* daisyChain, uint16_t deviceCount, const ltc6811Config_t* config)
+void ltc6811StartChain (ltc6811_t* bottom, const ltc6811Config_t* config)
 {
-	for (uint16_t index = 0; index < deviceCount; ++index)
+	// Initialize the device
+	*bottom = (ltc6811_t)
 	{
-		// Initialize the doubly linked-list.
-		daisyChain [index]->upperDevice = (index != deviceCount - 1) ? daisyChain [index + 1] : NULL;
-		daisyChain [index]->lowerDevice = (index != 0) ? daisyChain [index - 1] : NULL;
-		daisyChain [index]->topDevice = (index == 0) ? daisyChain [deviceCount - 1] : NULL;
+		// Doubly linked-list
+		.upperDevice			= NULL,
+		.lowerDevice			= NULL,
 
-		// Store the configuration in the bottom device
-		if (index == 0)
-			daisyChain [index]->config = config;
-		else
-		 	daisyChain [index]->config = NULL;
+		// Bottom-only configuration
+		.topDevice				= bottom,
+		.config					= config,
+		.deviceCount			= 1,
 
-		// Start from the ready state.
-		daisyChain [index]->state = LTC6811_STATE_READY;
+		// Default values
+		.gpioSensors			= { NULL },
+		.state					= LTC6811_STATE_READY
+	};
+}
 
-		daisyChain [index]->dischargeAllowed = config->dischargeAllowed;
-
-		for (uint16_t cell = 0; cell < LTC6811_CELL_COUNT; ++cell)
-		{
-			// Set all cells to default
-			daisyChain [index]->cellVoltages [cell] = 0.0f;
-			daisyChain [index]->cellsDischarging [cell] = false;
-		}
-
-		// Reset the wire faults.
-		for (uint16_t wire = 0; wire < LTC6811_WIRE_COUNT; ++wire)
-			daisyChain [index]->openWireFaults [wire] = false;
-
-		// TODO(Barach): Not a huge fan of this.
-		for (uint8_t gpio = 0; gpio < LTC6811_GPIO_COUNT; ++gpio)
-			daisyChain [index]->gpioSensors [gpio] = config->gpioSensors [index][gpio];
-	}
-
-	ltc6811Start (daisyChain [0]);
-	ltc6811WakeupSleep (daisyChain [0]);
-
-	if (!ltc6811WriteConfig (daisyChain [0]))
+void ltc6811AppendChain (ltc6811_t* bottom, ltc6811_t* ltc)
+{
+	// Initialize the device
+	*ltc = (ltc6811_t)
 	{
-		ltc6811Stop (daisyChain [0]);
+		// Doubly linked-list
+		.upperDevice	= NULL,
+		.lowerDevice	= bottom->topDevice,
+
+		// Default values
+		.gpioSensors	= { NULL },
+		.state			= LTC6811_STATE_READY
+	};
+
+	// Make this device the new top of the daisy chain
+	bottom->topDevice->upperDevice = ltc;
+	bottom->topDevice = ltc;
+	++bottom->deviceCount;
+}
+
+bool ltc6811FinalizeChain (ltc6811_t* bottom)
+{
+	// Wakeup the chain (assuming sleep mode, as that is very likely) and configures all the devices.
+
+	ltc6811Start (bottom);
+	ltc6811WakeupSleep (bottom);
+
+	if (!ltc6811WriteConfig (bottom))
+	{
+		ltc6811Stop (bottom);
 		return false;
 	}
 
-	ltc6811Stop (daisyChain [0]);
+	ltc6811Stop (bottom);
 	return false;
+}
+
+void ltc6811SetGpioSensor (ltc6811_t* ltc, uint8_t index, analogSensor_t* sensor)
+{
+	ltc->gpioSensors [index] = sensor;
 }
 
 void ltc6811Start (ltc6811_t* bottom)
@@ -478,7 +491,7 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-up command.
-		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, true), false))
+		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->config->dischargeAllowed, true), false))
 			return false;
 
 		// Block until complete.
@@ -494,7 +507,7 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-down command.
-		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->dischargeAllowed, false), false))
+		if (!writeCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->config->dischargeAllowed, false), false))
 			return false;
 
 		// Block until complete.
@@ -733,7 +746,7 @@ bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)
 	// See LTC6811 datasheet section "Measuring Cell Voltages (ADCV Command)", pg.25.
 
 	// Start the cell voltage conversion for all cells, conditionally permitting discharge.
-	if (!writeCommand (bottom, COMMAND_ADCV (bottom->config->cellAdcMode, bottom->dischargeAllowed, 0b000), false))
+	if (!writeCommand (bottom, COMMAND_ADCV (bottom->config->cellAdcMode, bottom->config->dischargeAllowed, 0b000), false))
 		return false;
 
 	if (!pollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
