@@ -11,11 +11,8 @@
 // Note: This code is derivative of the Analog Devices Linduino codebase:
 //   https://github.com/analogdevicesinc/Linduino/tree/master.
 //
-// TODO(Barach): Remove extra cell voltage buffers?
-// TODO(Barach): No need to wake chain every operation
-// TODO(Barach): Reading 5x the data required.
-// TODO(Barach): Combined GPIO and cell voltage command exists.
-// TODO(Barach): Mux self test.
+// TODO(Barach):
+// - Mux self test?
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
