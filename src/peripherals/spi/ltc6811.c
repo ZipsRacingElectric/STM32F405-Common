@@ -397,9 +397,9 @@ bool ltc6811SampleStatus (ltc6811_t* bottom)
 	if (!pollAdc (bottom, STATUS_ADC_MODE_TIMEOUTS [bottom->config->statusAdcMode]))
 		return false;
 
-	// Read the status register group A.
-	if (!readRegisterGroups (bottom, COMMAND_RDSTATA))
-		return false;
+	// Read the status register group A. If this fails, we'd still like to try to read in case only part of the daisy chain is
+	// failed.
+	readRegisterGroups (bottom, COMMAND_RDSTATA);
 
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
@@ -431,12 +431,10 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 		return false;
 	}
 
-	// Read the auxiliary register group B
+	// Read the auxiliary register group B. If this fails, we'd still like to try to read in case only part of the daisy
+	// chain is failed.
 	if (!readRegisterGroups (bottom, COMMAND_RDAUXB))
-	{
 		failGpio (bottom);
-		return false;
-	}
 
 	// Read GPIO 4, GPIO 5, and VREF2
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
@@ -457,12 +455,10 @@ bool ltc6811SampleGpio (ltc6811_t* bottom)
 		}
 	}
 
-	// Read the auxiliary register group A
+	// Read the auxiliary register group A. If this fails, we'd still like to try to read in case only part of the daisy
+	// chain is failed.
 	if (!readRegisterGroups (bottom, COMMAND_RDAUXA))
-	{
 		failGpio (bottom);
-		return false;
-	}
 
 	// Read GPIO 1 to 3
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
@@ -752,8 +748,9 @@ bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)
 	if (!pollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
 		return false;
 
-	if (!readRegisterGroups (bottom, COMMAND_RDCVA))
-		return false;
+	// Read the first 3 cell voltage. If this fails, we'd still like to try to read in case only part of the daisy chain is
+	// failed.
+	readRegisterGroups (bottom, COMMAND_RDCVA);
 
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
@@ -781,8 +778,9 @@ bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)
 		}
 	}
 
-	if (!readRegisterGroups (bottom, COMMAND_RDCVB))
-		return false;
+	// Read the next 3 cell voltage. If this fails, we'd still like to try to read in case only part of the daisy chain is
+	// failed.
+	readRegisterGroups (bottom, COMMAND_RDCVB);
 
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
@@ -810,8 +808,9 @@ bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)
 		}
 	}
 
-	if (!readRegisterGroups (bottom, COMMAND_RDCVC))
-		return false;
+	// Read the next 3 cell voltage. If this fails, we'd still like to try to read in case only part of the daisy chain is
+	// failed.
+	readRegisterGroups (bottom, COMMAND_RDCVC);
 
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
@@ -839,8 +838,9 @@ bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination)
 		}
 	}
 
-	if (!readRegisterGroups (bottom, COMMAND_RDCVD))
-		return false;
+	// Read the next 3 cell voltage. If this fails, we'd still like to try to read in case only part of the daisy chain is
+	// failed.
+	readRegisterGroups (bottom, COMMAND_RDCVD);
 
 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
 	{
