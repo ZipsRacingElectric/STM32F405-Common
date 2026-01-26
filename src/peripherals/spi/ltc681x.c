@@ -137,9 +137,9 @@ bool ltc681xWriteConfig (ltc681x_t* bottom)
 		device->tx [0] = CFGRA0 (1, 1, 1, 1, 1, 1, 0);
 
 		// Undervoltage / overvoltage thresholds. We don't use them, so no need to set.
-		device->tx [0] = CFGRA1 (0);
-		device->tx [0] = CFGRA2 (0, 0);
-		device->tx [0] = CFGRA3 (0);
+		device->tx [1] = CFGRA1 (0);
+		device->tx [2] = CFGRA2 (0, 0);
+		device->tx [3] = CFGRA3 (0);
 
 		// Cells to discharge.
 		device->tx [4] = CFGRA4 (
