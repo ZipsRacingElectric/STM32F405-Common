@@ -15,8 +15,8 @@ static bool sampleCells (ltc6811_t* bottom, cellVoltageDestination_t destination
 {
 	// See LTC6811 datasheet section "Measuring Cell Voltages (ADCV Command)", pg.25.
 
-	// Start the cell voltage conversion for all cells, conditionally permitting discharge.
-	if (!ltc681xWriteCommand (bottom, COMMAND_ADCV (bottom->config->cellAdcMode, bottom->config->dischargeAllowed, 0b000), false))
+	// Start the cell voltage conversion for all cells, not permitting discharge.
+	if (!ltc681xWriteCommand (bottom, COMMAND_ADCV (bottom->config->cellAdcMode, false, 0b000), false))
 		return false;
 
 	if (!ltc681xPollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
@@ -225,7 +225,7 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-up command.
-		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->config->dischargeAllowed, true), false))
+		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, false, true), false))
 			return false;
 
 		// Block until complete.
@@ -241,7 +241,7 @@ bool ltc6811OpenWireTest (ltc6811_t* bottom)
 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
 	{
 		// Send the pull-down command.
-		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, bottom->config->dischargeAllowed, false), false))
+		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, false, false), false))
 			return false;
 
 		// Block until complete.

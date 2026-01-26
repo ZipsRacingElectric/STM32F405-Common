@@ -99,9 +99,6 @@ typedef struct
 	/// @brief The ADC conversion mode to use for measuring the status values.
 	ltc681xAdcMode_t statusAdcMode;
 
-	/// @brief Indicates whether or not dischaging cell should be permitted.
-	bool dischargeAllowed;
-
 	/// @brief The maximum amount of time a cell may be discharged without receiving an update.
 	ltc681xDischargeTimeout_t dischargeTimeout;
 
