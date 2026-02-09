@@ -49,7 +49,7 @@ typedef struct
 	/// within this timeframe, it will be considered invalid.
 	sysinterval_t timeout;
 
-	/// @brief The magic string used to validate the EEPROM's contents.
+	/// @brief The magic string used to validate the EEPROM's contents. Must be 15 characters or less.
 	const char* magicString;
 
 	/// @brief Callback for when the device's memory is modified.
