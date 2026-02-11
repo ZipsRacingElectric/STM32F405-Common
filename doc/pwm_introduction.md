@@ -6,7 +6,7 @@ In ChibiOS pulse-width modulation (or PWM) can be implemented via the PWM driver
 
 The PWM driver is a single timer, but it may control multiple outputs (called channels). On the STM32F405, each PWM driver has 4 output channels. All channels controlled by a PWM driver have a single PWM frequency (due to sharing a timer), but may have independent duty cycles.
 
-A PWM driver consists of a single timer, a single counter, and **N** comparison registers. On every tick of the timer, the counter is incremented by 1. Once the timer value of the timer reaches a certain value (called the PWM period), it resets to 0 and starts counting again.
+A PWM driver consists of a single timer, a single counter, and **N** comparison registers (1 per channel). On every tick of the timer, the counter is incremented by 1. Once the timer value of the timer reaches a certain value (called the PWM period), it resets to 0 and starts counting again.
 
 The output of each PWM channel is determined by whether the value in its register (called the width) is greater than or less than the value of the counter. If the value is less than that of the counter, the channel's output is active, otherwise the channel's output is inactive. This effectively means the duty cycle of the channel can be set by setting the width of the channel.
 
@@ -34,7 +34,7 @@ msg_t pwmStart(PWMDriver* pwmp, const PWMConfig* config);
 ### Configuration Structure
 
 The important parameters of a PWM controller are:
-- Clock Frequency: The frequency of the clock implementing the controller. This clock acts like a counter, increasing **N** times per second.
+- Clock Frequency: The frequency of the clock implementing the controller. This clock acts like a counter, increasing **M** times per second.
 - PWM Period: The value at which the clock's counter is reset. This determines how long the total PWM wave is (both low time and high time).
 
 The PWM period can be calculated from the Clock Frequency and the PWM Period:
