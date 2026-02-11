@@ -4,7 +4,7 @@
 // Analog Sensor --------------------------------------------------------------------------------------------------------------
 //
 // Author: Cole Barach
-// Date Created: 2022.03.01
+// Date Created: 2025.03.01
 //
 // Description: Base object for an analog sensor. This object provides a standard interface for any peripheral that applies a
 //   transfer function to an ADC measurement. Note the ADC can be external to this device (doesn't need to be the STM ADC).
