@@ -2,11 +2,29 @@
 
 ## ChibiOS Interface
 
-In ChibiOS pulse-width modulation (or PWM) can be implemented via the PWM driver. Like almost all drivers in ChibiOS, in order to use the PWM driver it must first be configured.
+In ChibiOS pulse-width modulation (or PWM) can be implemented via the PWM driver.
 
-Note that in ChibiOS the PWM driver is a single timer, but it may control multiple outputs (called channels). On the STM32F405, each PWM driver has 4 output channels. All channels controlled by a PWM driver have a single PWM frequency (due to sharing a timer), but may have independent duty cycles.
+The PWM driver is a single timer, but it may control multiple outputs (called channels). On the STM32F405, each PWM driver has 4 output channels. All channels controlled by a PWM driver have a single PWM frequency (due to sharing a timer), but may have independent duty cycles.
+
+A PWM driver consists of a single timer, a single counter, and **N** comparison registers. On every tick of the timer, the counter is incremented by 1. Once the timer value of the timer reaches a certain value (called the PWM period), it resets to 0 and starts counting again.
+
+The output of each PWM channel is determined by whether the value in its register (called the width) is greater than or less than the value of the counter. If the value is less than that of the counter, the channel's output is active, otherwise the channel's output is inactive. This effectively means the duty cycle of the channel can be set by setting the width of the channel.
+
+```
+dutyCycle = width / period
+```
+
+or
+
+```
+width = dutyCycle * period
+```
+
+Note that, as both the channel's width and the PWM period are integers, this implies the resolution of the duty cycle (how close you can get to a desired value) is dependent on the value of the PWM period. This is important to keep in mind when selecting a value of the PWM period.
 
 ### Starting the PWM Driver
+
+Like almost all drivers in ChibiOS, in order to use the PWM driver it must first be configured.
 
 The `pwmStart` function is used to configure and start a specific PWM driver. The `config` structure determines how the driver will behave. See *Configuration Structure* for how this is defined.
 ```
@@ -80,13 +98,6 @@ Parameters:
 - `pwmp`    - Pointer to the PWM driver to use.
 - `channel` - The index of the channel to modify in range [0, PWM_CHANNELS - 1]
 - `width`   - The width of the high cycle, in clock tick.
-
-The Duty Cycle of the channel can be calculated from the channel width and PWM period:
-```
-dutyCycle = width / period
-```
-
-Note that, as both `width` and `period` are integers, this implies the resolution of the duty cycle (how close you can get to a desired value) is dependent on the value of `period`. This is important to keep in mind when selecting a value of `period`.
 
 ## Examples
 
