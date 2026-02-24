@@ -8,6 +8,8 @@
 //
 // Description: Object representing the BMS CAN node.
 
+// TODO(Barach): Out-of-date.
+
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
