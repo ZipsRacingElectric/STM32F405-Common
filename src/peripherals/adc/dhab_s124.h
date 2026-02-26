@@ -10,6 +10,8 @@
 //   low-range / high-precision channel and a high-range / low-precision channel. When sampled, the sensor object will choose
 //   the more precise of the two channels.
 
+// TODO(Barach): Replace sample sensitivity with voltage sensitiviy & voltage divider config?
+
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
