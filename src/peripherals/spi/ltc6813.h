@@ -41,7 +41,7 @@ typedef ltc681xConfig_t			ltc6813Config_t;
 
 #define LTC6813_CELL_COUNT		18
 #define LTC6813_WIRE_COUNT		(LTC6813_CELL_COUNT + 1)
-#define LTC6813_GPIO_COUNT		5 // TODO(Barach): 9
+#define LTC6813_GPIO_COUNT		9
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -54,22 +54,22 @@ typedef ltc681xConfig_t			ltc6813Config_t;
  */
 bool ltc6813SampleCells (ltc6813_t* bottom);
 
-// /**
-//  * @brief Samples the GPIO voltages of all devices in a daisy chain.
-//  * @note Must be called between @c ltc6813Start and @c ltc6813Stop .
-//  * @param bottom The bottom (first) device in the stack.
-//  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
-//  * check individual sensor states to determine so.
-//  */
-// bool ltc6813SampleGpio (ltc6813_t* bottom);
+/**
+ * @brief Samples the GPIO voltages of all devices in a daisy chain.
+ * @note Must be called between @c ltc6813Start and @c ltc6813Stop .
+ * @param bottom The bottom (first) device in the stack.
+ * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
+ * check individual sensor states to determine so.
+ */
+bool ltc6813SampleGpio (ltc6813_t* bottom);
 
-// /**
-//  * @brief Performs an open-wire test on all devices in a daisy chain.
-//  * @note Must be called between @c ltc6813Start and @c ltc6813Stop .
-//  * @param bottom The bottom (first) device in the stack.
-//  * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
-//  * check individual device states to determine so.
-//  */
-// bool ltc6813OpenWireTest (ltc6813_t* bottom);
+/**
+ * @brief Performs an open-wire test on all devices in a daisy chain.
+ * @note Must be called between @c ltc6813Start and @c ltc6813Stop .
+ * @param bottom The bottom (first) device in the stack.
+ * @return False if a fatal error occurred, true otherwise. A non-fatal return code does not mean all measurements are valid,
+ * check individual device states to determine so.
+ */
+bool ltc6813OpenWireTest (ltc6813_t* bottom);
 
 #endif // LTC6813_H

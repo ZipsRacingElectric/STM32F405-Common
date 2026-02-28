@@ -211,130 +211,169 @@ bool ltc6813SampleCells (ltc6813_t* bottom)
 	return sampleCells (bottom, CELL_VOLTAGE_DESTINATION_VOLTAGE_BUFFER);
 }
 
-// bool ltc6811SampleGpio (ltc6811_t* bottom)
-// {
-// 	// See LTC6811 datasheet section "Auxiliary (GPIO) Measurements (ADAX Command)", pg.26.
+bool ltc6813SampleGpio (ltc6813_t* bottom)
+{
+	// See LTC6813 datasheet section "Auxiliary (GPIO) Measurements (ADAX Command)", pg.24.
 
-// 	// Start the ADC measurement for all GPIO.
-// 	if (!ltc681xWriteCommand (bottom, COMMAND_ADAX (bottom->config->gpioAdcMode, 0b000), false))
-// 	{
-// 		ltc681xFailGpio (bottom);
-// 		return false;
-// 	}
+	// Start the ADC measurement for all GPIO.
+	if (!ltc681xWriteCommand (bottom, COMMAND_ADAX (bottom->config->gpioAdcMode, 0b000), false))
+	{
+		ltc681xFailGpio (bottom);
+		return false;
+	}
 
-// 	// Block until the ADC conversion is complete
-// 	if (!ltc681xPollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->gpioAdcMode]))
-// 	{
-// 		ltc681xFailGpio (bottom);
-// 		return false;
-// 	}
+	// Block until the ADC conversion is complete
+	if (!ltc681xPollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->gpioAdcMode]))
+	{
+		ltc681xFailGpio (bottom);
+		return false;
+	}
 
-// 	// Read the auxiliary register group B. If this fails, we'd still like to try to read in case only part of the daisy
-// 	// chain is failed.
-// 	if (!ltc681xReadRegisterGroups (bottom, COMMAND_RDAUXB))
-// 		ltc681xFailGpio (bottom);
+	// Read the auxiliary register group B. If this fails, we'd still like to try to read in case only part of the daisy
+	// chain is failed.
+	if (!ltc681xReadRegisterGroups (bottom, COMMAND_RDAUXB))
+		ltc681xFailGpio (bottom);
 
-// 	// Read GPIO 4, GPIO 5, and VREF2
-// 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-// 	{
-// 		// Store VREF2
-// 		device->vref2 = device->rx [5] << 8 | device->rx [4];
+	// Read GPIO 4, GPIO 5, and VREF2
+	for (ltc6813_t* device = bottom; device != NULL; device = device->upperDevice)
+	{
+		// Store VREF2
+		device->vref2 = device->rx [5] << 8 | device->rx [4];
 
-// 		for (uint8_t gpioIndex = 3; gpioIndex < LTC6811_GPIO_COUNT; ++gpioIndex)
-// 		{
-// 			analogSensor_t* sensor = device->gpioSensors [gpioIndex];
-// 			if (sensor == NULL)
-// 				continue;
+		for (uint8_t gpioIndex = 3; gpioIndex < 5; ++gpioIndex)
+		{
+			analogSensor_t* sensor = device->gpioSensors [gpioIndex];
+			if (sensor == NULL)
+				continue;
 
-// 			uint16_t sample = device->rx [gpioIndex * 2 - 5] << 8 | device->rx [gpioIndex * 2 - 6];
+			uint16_t sample = device->rx [gpioIndex * 2 - 5] << 8 | device->rx [gpioIndex * 2 - 6];
 
-// 			// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
-// 			analogSensorUpdate (sensor, sample, device->vref2);
-// 		}
-// 	}
+			// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
+			analogSensorUpdate (sensor, sample, device->vref2);
+		}
+	}
 
-// 	// Read the auxiliary register group A. If this fails, we'd still like to try to read in case only part of the daisy
-// 	// chain is failed.
-// 	if (!ltc681xReadRegisterGroups (bottom, COMMAND_RDAUXA))
-// 		ltc681xFailGpio (bottom);
+	// Read the auxiliary register group D. If this fails, we'd still like to try to read in case only part of the daisy
+	// chain is failed.
+	if (!ltc681xReadRegisterGroups (bottom, COMMAND_RDAUXD))
+		ltc681xFailGpio (bottom);
 
-// 	// Read GPIO 1 to 3
-// 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-// 	{
-// 		for (uint8_t gpioIndex = 0; gpioIndex < 3; ++gpioIndex)
-// 		{
-// 			analogSensor_t* sensor = device->gpioSensors [gpioIndex];
-// 			if (sensor == NULL)
-// 				continue;
+	// Read GPIO 9
+	for (ltc6813_t* device = bottom; device != NULL; device = device->upperDevice)
+	{
+		analogSensor_t* sensor = device->gpioSensors [8];
+		if (sensor == NULL)
+			continue;
 
-// 			uint16_t sample = device->rx [gpioIndex * 2 + 1] << 8 | device->rx [gpioIndex * 2];
+		uint16_t sample = device->rx [1] << 8 | device->rx [0];
 
-// 			// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
-// 			analogSensorUpdate (sensor, sample, device->vref2);
-// 		}
-// 	}
+		// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
+		analogSensorUpdate (sensor, sample, device->vref2);
+	}
 
-// 	return true;
-// }
+	// Read the auxiliary register group C. If this fails, we'd still like to try to read in case only part of the daisy
+	// chain is failed.
+	if (!ltc681xReadRegisterGroups (bottom, COMMAND_RDAUXC))
+		ltc681xFailGpio (bottom);
 
-// bool ltc6811OpenWireTest (ltc6811_t* bottom)
-// {
-// 	// See LTC6811 datasheet section "Open Wire Check (ADOW Command)", pg.34.
+	// Read GPIO 6, GPIO 7, and GPIO 8
+	for (ltc6813_t* device = bottom; device != NULL; device = device->upperDevice)
+	{
+		for (uint8_t gpioIndex = 5; gpioIndex < 8; ++gpioIndex)
+		{
+			analogSensor_t* sensor = device->gpioSensors [gpioIndex];
+			if (sensor == NULL)
+				continue;
 
-// 	// Pull-up measurement
-// 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
-// 	{
-// 		// Send the pull-up command.
-// 		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, false, true), false))
-// 			return false;
+			uint16_t sample = device->rx [gpioIndex * 2 - 9] << 8 | device->rx [gpioIndex * 2 - 10];
 
-// 		// Block until complete.
-// 		if (!ltc681xPollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
-// 			return false;
-// 	}
+			// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
+			analogSensorUpdate (sensor, sample, device->vref2);
+		}
+	}
 
-// 	// Sample the cell voltages into the pull-up buffer.
-// 	if (!sampleCells (bottom, CELL_VOLTAGE_DESTINATION_PULLUP_BUFFER))
-// 		return false;
+	// Read the auxiliary register group A. If this fails, we'd still like to try to read in case only part of the daisy
+	// chain is failed.
+	if (!ltc681xReadRegisterGroups (bottom, COMMAND_RDAUXA))
+		ltc681xFailGpio (bottom);
 
-// 	// Pull-down measurement
-// 	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
-// 	{
-// 		// Send the pull-down command.
-// 		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, false, false), false))
-// 			return false;
+	// Read GPIO 1 to 3
+	for (ltc6813_t* device = bottom; device != NULL; device = device->upperDevice)
+	{
+		for (uint8_t gpioIndex = 0; gpioIndex < 3; ++gpioIndex)
+		{
+			analogSensor_t* sensor = device->gpioSensors [gpioIndex];
+			if (sensor == NULL)
+				continue;
 
-// 		// Block until complete.
-// 		if (!ltc681xPollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
-// 			return false;
-// 	}
+			uint16_t sample = device->rx [gpioIndex * 2 + 1] << 8 | device->rx [gpioIndex * 2];
 
-// 	// Sample the cell voltages into the pull-down buffer.
-// 	if (!sampleCells (bottom, CELL_VOLTAGE_DESTINATION_PULLDOWN_BUFFER))
-// 		return false;
+			// Update the sensor with the last sample, providing VREF2 as the analog supply voltage.
+			analogSensorUpdate (sensor, sample, device->vref2);
+		}
+	}
 
-// 	// Check each device, cell-by-cell
-// 	// Note that in the datasheet, sense wires are indexed 0 to 12 while cells are indexed 1 to 12.
-// 	for (ltc6811_t* device = bottom; device != NULL; device = device->upperDevice)
-// 	{
-// 		// For wire 0, if cell 1 read 0V (1mV tolerance for noise) during pull-up, the wire is open.
-// 		device->openWireFaults [0] = device->cellVoltagesPullup [0] < 0.001f && device->cellVoltagesPullup [0] > -0.001f;
+	return true;
+}
 
-// 		// For wire n in [1 to 11], if cell delta (n+1) < -400mV, the wire is open.
-// 		for (uint8_t wire = 1; wire < LTC6811_CELL_COUNT - 1; ++wire)
-// 		{
-// 			device->cellVoltagesDelta [wire] = device->cellVoltagesPullup [wire] - device->cellVoltagesPulldown [wire];
-// 			device->openWireFaults [wire] = device->cellVoltagesDelta [wire] < -0.4f;
-// 		}
+bool ltc6813OpenWireTest (ltc6813_t* bottom)
+{
+	// See LTC6813 datasheet section "Open Wire Check (ADOW Command)", pg.32.
 
-// 		// Note: The datasheet calls out 400mV, but testing shows it as 800mV.
-// 		// For wire 11, if cell delta 12 < -800mV, the wire is open.
-// 		device->cellVoltagesDelta [11] = device->cellVoltagesPullup [11] - device->cellVoltagesPulldown [11];
-// 		device->openWireFaults [11] = device->cellVoltagesDelta [11] < -0.8f;
+	// Pull-up measurement
+	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
+	{
+		// Send the pull-up command.
+		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, false, true), false))
+			return false;
 
-// 		// For wire 12, if cell 12 read 0V (1mV tolerance for noise) during pull-down, the wire is open.
-// 		device->openWireFaults [12] = device->cellVoltagesPulldown [11] < 0.001f && device->cellVoltagesPulldown [11] > -0.001f;
-// 	}
+		// Block until complete.
+		if (!ltc681xPollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
+			return false;
+	}
 
-// 	return true;
-// }
+	// Sample the cell voltages into the pull-up buffer.
+	if (!sampleCells (bottom, CELL_VOLTAGE_DESTINATION_PULLUP_BUFFER))
+		return false;
+
+	// Pull-down measurement
+	for (uint8_t index = 0; index < bottom->config->openWireTestIterations; ++index)
+	{
+		// Send the pull-down command.
+		if (!ltc681xWriteCommand (bottom, COMMAND_ADOW (0b000, bottom->config->cellAdcMode, false, false), false))
+			return false;
+
+		// Block until complete.
+		if (!ltc681xPollAdc (bottom, ADC_MODE_TIMEOUTS [bottom->config->cellAdcMode]))
+			return false;
+	}
+
+	// Sample the cell voltages into the pull-down buffer.
+	if (!sampleCells (bottom, CELL_VOLTAGE_DESTINATION_PULLDOWN_BUFFER))
+		return false;
+
+	// Check each device, cell-by-cell
+	// Note that in the datasheet, sense wires are indexed 0 to 12 while cells are indexed 1 to 12.
+	for (ltc6813_t* device = bottom; device != NULL; device = device->upperDevice)
+	{
+		// For wire 0, if cell 1 read 0V (1mV tolerance for noise) during pull-up, the wire is open.
+		device->openWireFaults [0] = device->cellVoltagesPullup [0] < 0.001f && device->cellVoltagesPullup [0] > -0.001f;
+
+		// For wire n in [1 to 17], if cell delta (n+1) < -400mV, the wire is open.
+		for (uint8_t wire = 1; wire < LTC6813_CELL_COUNT - 1; ++wire)
+		{
+			device->cellVoltagesDelta [wire] = device->cellVoltagesPullup [wire] - device->cellVoltagesPulldown [wire];
+			device->openWireFaults [wire] = device->cellVoltagesDelta [wire] < -0.4f;
+		}
+
+		// Note: The datasheet calls out 400mV, but testing shows it as 800mV.
+		// For wire 17, if cell delta 18 < -800mV, the wire is open.
+		device->cellVoltagesDelta [17] = device->cellVoltagesPullup [17] - device->cellVoltagesPulldown [17];
+		device->openWireFaults [17] = device->cellVoltagesDelta [17] < -0.8f;
+
+		// For wire 18, if cell 18 read 0V (1mV tolerance for noise) during pull-down, the wire is open.
+		device->openWireFaults [18] = device->cellVoltagesPulldown [17] < 0.001f && device->cellVoltagesPulldown [17] > -0.001f;
+	}
+
+	return true;
+}

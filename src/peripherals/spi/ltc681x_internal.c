@@ -258,7 +258,8 @@ void ltc681xFailGpio (ltc681x_t* bottom)
 		for (uint16_t gpioIndex = 0; gpioIndex < LTC681X_GPIO_COUNT; ++gpioIndex)
 		{
 			analogSensor_t* sensor = device->gpioSensors [gpioIndex];
-			analogSensorFail (sensor);
+			if (sensor != NULL)
+				analogSensorFail (sensor);
 		}
 	}
 }

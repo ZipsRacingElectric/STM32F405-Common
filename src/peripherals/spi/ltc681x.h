@@ -27,7 +27,7 @@
 // Maximum number of cells, wires, and GPIO used by any LTC driver.
 #define LTC681X_CELL_COUNT		18
 #define LTC681X_WIRE_COUNT		(LTC681X_CELL_COUNT + 1)
-#define LTC681X_GPIO_COUNT		5		// TODO(Barach): 9
+#define LTC681X_GPIO_COUNT		9
 
 #define LTC681X_BUFFER_SIZE		8
 
