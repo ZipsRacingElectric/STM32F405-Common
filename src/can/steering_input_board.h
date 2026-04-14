@@ -1,13 +1,13 @@
-#ifndef DRIVER_INPUT_BOARD_H
-#define DRIVER_INPUT_BOARD_H
+#ifndef STEERING_INPUT_BOARD_H
+#define STEERING_INPUT_BOARD_H
 
-// Driver Input Board CAN Node ------------------------------------------------------------------------------------------------
+// Steering Input Board CAN Node ------------------------------------------------------------------------------------------------
 //
 // Author: Cole Barach
-// Date Created: 2024.10.16
+// Date Created: 2025.10.16
 //
-// Description: Object representing a driver input board CAN node. Note that multiple driver input boards can be used on the
-//   same CAN bus, in which case CAN ID is used to differentiate them.
+// Description: Object representing a driver input board CAN node. Note that multiple steering input boards can be used on the
+//   same CAN bus, in which case the CAN ID is used to differentiate them.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ typedef struct
 
 	/// @brief The standard CAN ID of the device's input message.
 	uint16_t canId;
-} dibConfig_t;
+} sibConfig_t;
 
 typedef struct
 {
@@ -39,10 +39,10 @@ typedef struct
 
 	/// @brief The analog reading of each analog input of the driver input board. In range [0, 1].
 	float analogValues [2];
-} dib_t;
+} sib_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void dibInit (dib_t* dib, dibConfig_t* config);
+void sibInit (sib_t* sib, const sibConfig_t* config);
 
-#endif // DRIVER_INPUT_BOARD_H
+#endif // STEERING_INPUT_BOARD_H

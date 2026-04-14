@@ -1,5 +1,5 @@
-ifndef DRIVER_INPUT_BOARD_MK
-define DRIVER_INPUT_BOARD_MK
+ifndef STEERING_INPUT_BOARD_MK
+define STEERING_INPUT_BOARD_MK
 1
 endef
 
@@ -7,6 +7,6 @@ endef
 include common/src/can/can_node.mk
 
 # Add the module's source file to the compilation
-CSRC += common/src/can/driver_input_board.c
+CSRC += common/src/can/steering_input_board.c
 
-endif # DRIVER_INPUT_BOARD_MK
+endif # STEERING_INPUT_BOARD_MK

@@ -1,25 +1,27 @@
 // Header
-#include "driver_input_board.h"
+#include "steering_input_board.h"
+
+#define SIB_MESSAGE_FLAG 0x00
 
 static int8_t receive (void* node, CANRxFrame* frame)
 {
-	dib_t* dib = node;
+	sib_t* sib = node;
 	uint16_t id = frame->SID;
 
 	// Identify and handle the message.
-	if (id == dib->canId)
+	if (id == sib->canId)
 	{
 		// Handle input message
 
 		// Button inputs
 		for (uint8_t index = 0; index < 8; ++index)
-			dib->buttonsPressed [index] = ((frame->data8 [0] >> index) & 0b1) == 0b1;
+			sib->buttonsPressed [index] = ((frame->data8 [0] >> index) & 0b1) == 0b1;
 
 		// Analog inputs
 		for (uint8_t index = 0; index < 2; ++index)
-			dib->analogValues [index] = frame->data8 [index + 1] / 255.0f;
+			sib->analogValues [index] = frame->data8 [index + 1] / 255.0f;
 
-		return 0;
+		return SIB_MESSAGE_FLAG;
 	}
 	else
 	{
@@ -28,7 +30,7 @@ static int8_t receive (void* node, CANRxFrame* frame)
 	}
 }
 
-void dibInit (dib_t* dib, dibConfig_t* config)
+void sibInit (sib_t* sib, const sibConfig_t* config)
 {
 	canNodeConfig_t nodeConfig =
 	{
@@ -38,6 +40,6 @@ void dibInit (dib_t* dib, dibConfig_t* config)
 		.timeoutPeriod	= config->timeoutPeriod,
 		.messageCount	= 1,
 	};
-	canNodeInit ((canNode_t*) dib, &nodeConfig);
-	dib->canId = config->canId;
+	canNodeInit ((canNode_t*) sib, &nodeConfig);
+	sib->canId = config->canId;
 }
