@@ -8,8 +8,6 @@
 //
 // Description: Object representing the BMS CAN node.
 
-// TODO(Barach): Out-of-date.
-
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
@@ -26,19 +24,25 @@ typedef struct
 typedef struct
 {
 	CAN_NODE_FIELDS;
-	bool undervoltageFault;
-	bool overvoltageFault;
-	bool undertemperatureFault;
-	bool overtemperatureFault;
-	bool senseLineFault;
-	bool isoSpiFault;
-	bool selfTestFault;
+
+	/// @brief Indicates a BMS fault is present.
+	bool bmsFault;
+
+	/// @brief Indicates an IMD fault is present.
+	bool imdFault;
+
+	/// @brief Indicates the BMS is charging.
 	bool charging;
+
+	/// @brief Indicates the BMS is balancing.
 	bool balancing;
-	bool shutdownClosed;
-	bool prechargeComplete;
-	bool bmsRelayStatus;
-	bool imdRelayStatus;
+
+	/// @brief Indicates the negative isolation relay is closed. This does not indicate precharge is complete, for that,
+	/// see @c positiveIrClosed .
+	bool negativeIrClosed;
+
+	/// @brief Indicates the positive isolation relay is closed. This indicates precharge is complete.
+	bool positiveIrClosed;
 } bms_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

@@ -31,19 +31,12 @@ void bmsInit (bms_t* bms, const bmsConfig_t* config)
 
 void bmsHandleStatusMessage (bms_t* bms, CANRxFrame* frame)
 {
-	bms->undervoltageFault		= (frame->data8 [0] & 0b00000001) == 0b00000001;
-	bms->overvoltageFault		= (frame->data8 [0] & 0b00000010) == 0b00000010;
-	bms->undertemperatureFault	= (frame->data8 [0] & 0b00000100) == 0b00000100;
-	bms->overtemperatureFault	= (frame->data8 [0] & 0b00001000) == 0b00001000;
-	bms->senseLineFault			= (frame->data8 [0] & 0b00010000) == 0b00010000;
-	bms->isoSpiFault			= (frame->data8 [0] & 0b00100000) == 0b00100000;
-	bms->selfTestFault			= (frame->data8 [0] & 0b01000000) == 0b01000000;
-	bms->charging				= (frame->data8 [0] & 0b10000000) == 0b10000000;
-	bms->balancing				= (frame->data8 [1] & 0b00000001) == 0b00000001;
-	bms->shutdownClosed			= (frame->data8 [1] & 0b00000010) == 0b00000010;
-	bms->prechargeComplete		= (frame->data8 [1] & 0b00000100) == 0b00000100;
-	bms->bmsRelayStatus			= (frame->data8 [1] & 0b00010000) == 0b00010000;
-	bms->imdRelayStatus			= (frame->data8 [1] & 0b00100000) == 0b00100000;
+	bms->bmsFault				= (frame->data8 [0] & 0b10000000) == 0b10000000;
+	bms->imdFault				= (frame->data8 [1] & 0b00000001) == 0b00000001;
+	bms->charging				= (frame->data8 [1] & 0b00000010) == 0b00000010;
+	bms->balancing				= (frame->data8 [1] & 0b00000100) == 0b00000100;
+	bms->negativeIrClosed		= (frame->data8 [2] & 0b00000001) == 0b00000001;
+	bms->positiveIrClosed		= (frame->data8 [2] & 0b00000010) == 0b00000010;
 }
 
 int8_t bmsReceiveHandler (void *node, CANRxFrame *frame)
