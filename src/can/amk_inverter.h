@@ -68,6 +68,8 @@ typedef struct
 
 	CANDriver* bridgeDriver;
 
+	uint16_t errorResetCount;
+
 	/// @brief Indicates whether the inverter is ready and error-free.
 	bool systemReady;
 

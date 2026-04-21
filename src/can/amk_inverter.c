@@ -1,6 +1,11 @@
 // Header
 #include "amk_inverter.h"
 
+// Misc Constants --------------------------------------------------------------------------------------------------------------
+
+/// @brief The maximum number of attempts to be made for an error reset request.
+#define ERROR_RESET_REQUEST_MAX_ATTEMPTS 2
+
 // Conversions -----------------------------------------------------------------------------------------------------------------
 
 // Torque values (unit Nm)
@@ -89,6 +94,9 @@ void amkInit (amkInverter_t* amk, const amkInverterConfig_t* config)
 	amk->baseId = config->baseId;
 	amk->bridgeDriver = config->bridgeDriver;
 
+	// Initial values
+	amk->errorResetCount = 0;
+
 	// Initialize the node
 	canNodeConfig_t canConfig =
 	{
@@ -109,7 +117,7 @@ amkInverterState_t amkGetState (amkInverter_t* amk)
 		return AMK_STATE_ERROR;
 	if (amk->quitInverter)
 		return AMK_STATE_READY_ENERGIZED;
-	if (amk->dcBusVoltage > 430)
+	if (amk->dcBusVoltage > 100)
 		return AMK_STATE_READY_HIGH_VOLTAGE;
 
 	return AMK_STATE_READY_LOW_VOLTAGE;
@@ -216,9 +224,18 @@ msg_t amkSendErrorResetRequest (amkInverter_t* amk, sysinterval_t timeout)
 	// If no error is present, exit early.
 	if (!amk->error && amk->systemReady)
 	{
+		amk->errorResetCount = 0;
 		canNodeUnlock ((canNode_t*) amk);
 		return MSG_OK;
 	}
+
+	// If the maximum number of reset requests has been made, do not attempt.
+	if (amk->errorResetCount >= ERROR_RESET_REQUEST_MAX_ATTEMPTS)
+	{
+		canNodeUnlock ((canNode_t*) amk);
+		return MSG_RESET;
+	}
+	++amk->errorResetCount;
 
 	// Assume the inverter requires re-energization.
 	amk->inverterOn		= false;
