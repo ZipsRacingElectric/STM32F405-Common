@@ -140,7 +140,7 @@ static inline float motorRrYawMomentTransfer (float trackWidthRear, float gearRa
  * @brief Calculates a scalar that transfers the FL motor's torque request into a moment applied to the vehicle's yaw axis (in
  * the clockwise direction). This value is unitless (Nm of yaw moment per Nm of motor torque).
  * @param wheelBase The wheel base of the vehicle, in meters.
- * @param frontRearWeightBias The front-to-rear bias of the vehicle's weight distribution. 0 => 100% rearwards, 1 => 100%
+ * @param weightFrontRearBias The front-to-rear bias of the vehicle's weight distribution. 1 => 100% rearwards, 0 => 100%
  * frontwards.
  * @param trackWidthFront The track width of the vehicle's front axle, in meters.
  * @param gearRatio The gear ratio of the gearbox.
@@ -148,23 +148,23 @@ static inline float motorRrYawMomentTransfer (float trackWidthRear, float gearRa
  * @param wheelAngle The angle the FL wheel is steering in the clockwise direction, in degrees.
  * @return The calculated transfer scalar.
  */
-static inline float motorFlYawMomentTransfer (float wheelBase, float frontRearWeightBias, float trackWidthFront,
+static inline float motorFlYawMomentTransfer (float wheelBase, float weightFrontRearBias, float trackWidthFront,
 	float gearRatio, float wheelRadius, float wheelAngle)
 {
 	// TODO(Barach): This is very slow, need to optimize.
 	float x = trackWidthFront / 2.0f;
-	float y = wheelBase * frontRearWeightBias;
+	float y = wheelBase * weightFrontRearBias;
 	float l = sqrtf (x * x + y * y);
 	float a = atanf (y / x);
 
-	return gearRatio * l / INCHES_TO_METERS (wheelRadius) * cosf (a - wheelAngle);
+	return gearRatio * l / INCHES_TO_METERS (wheelRadius) * cosf (a - DEGREES_TO_RADIANS (wheelAngle));
 }
 
 /**
  * @brief Calculates a scalar that transfers the FR motor's torque request into a moment applied to the vehicle's yaw axis (in
  * the clockwise direction). This value is unitless (Nm of yaw moment per Nm of motor torque).
  * @param wheelBase The wheel base of the vehicle, in meters.
- * @param frontRearWeightBias The front-to-rear bias of the vehicle's weight distribution. 0 => 100% rearwards, 1 => 100%
+ * @param weightFrontRearBias The front-to-rear bias of the vehicle's weight distribution. 1 => 100% rearwards, 0 => 100%
  * frontwards.
  * @param trackWidthFront The track width of the vehicle's front axle, in meters.
  * @param gearRatio The gear ratio of the gearbox.
@@ -172,10 +172,10 @@ static inline float motorFlYawMomentTransfer (float wheelBase, float frontRearWe
  * @param steerAngle The angle the FR wheel is steering in the clockwise direction, in degrees.
  * @return The calculated transfer scalar.
  */
-static inline float motorFrYawMomentTransfer (float wheelBase, float frontRearWeightBias, float trackWidthFront,
+static inline float motorFrYawMomentTransfer (float wheelBase, float weightFrontRearBias, float trackWidthFront,
 	float gearRatio, float wheelRadius, float wheelAngle)
 {
-	return -motorFlYawMomentTransfer (wheelBase, frontRearWeightBias, trackWidthFront, gearRatio, wheelRadius, -wheelAngle);
+	return -motorFlYawMomentTransfer (wheelBase, weightFrontRearBias, trackWidthFront, gearRatio, wheelRadius, -wheelAngle);
 }
 
 #endif // VEHICLE_DYNAMICS_H
