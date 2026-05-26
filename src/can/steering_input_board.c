@@ -49,39 +49,25 @@ void sibInit (sib_t* sib, const sibConfig_t* config)
 	sib->canId = config->canId;
 }
 
-bool sibGetButtonDownLock (sib_t* sib, uint8_t index)
+bool sibGetButtonDown (sib_t* sib, uint8_t index)
 {
-	canNodeLock ((canNode_t*) sib);
-
 	// Button was just pressed down if it is currently pressed and is not being held.
 	bool value = sib->buttonsPressed [index] && !sib->buttonsHeld [index];
 
 	// Button is held if it is currently pressed.
 	sib->buttonsHeld [index] = sib->buttonsPressed [index];
 
-	canNodeUnlock ((canNode_t*) sib);
-
 	return value;
 }
 
-bool sibGetButtonHeldLock (sib_t* sib, uint8_t index)
+bool sibGetButtonHeld (sib_t* sib, uint8_t index)
 {
-	canNodeLock ((canNode_t*) sib);
-
 	// Button is held if it is currently pressed.
 	sib->buttonsHeld [index] = sib->buttonsPressed [index];
-	bool value = sib->buttonsHeld [index];
-
-	canNodeUnlock ((canNode_t*) sib);
-
-	return value;
+	return sib->buttonsHeld [index];
 }
 
-float sibGetAnalogValueLock (sib_t* sib, uint8_t index)
+float sibGetAnalogValue (sib_t* sib, uint8_t index)
 {
-	canNodeLock ((canNode_t*) sib);
-	float value = sib->analogValues [index];
-	canNodeUnlock ((canNode_t*) sib);
-
-	return value;
+	return sib->analogValues [index];
 }

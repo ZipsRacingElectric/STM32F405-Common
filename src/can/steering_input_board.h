@@ -51,30 +51,57 @@ void sibInit (sib_t* sib, const sibConfig_t* config);
 /**
  * @brief Checks whether a button on the steering input board has just been pressed. Next call to this will return false until
  * the button is released.
- * @note This automatically locks and unlocks the CAN node. Do not call between locks.
  * @param sib The steering input board to check.
  * @param index The index of the button to check.
  * @return True if the button has just been pressed, false otherwise.
  */
-bool sibGetButtonDownLock (sib_t* sib, uint8_t index);
+bool sibGetButtonDown (sib_t* sib, uint8_t index);
 
 /**
  * @brief Checks whether a button on the steering input board is being held. This will return true until the button is
  * released.
- * @note This automatically locks and unlocks the CAN node. Do not call between locks.
  * @param sib The steering input board to check.
  * @param index The index of the button to check.
  * @return True if the button is being held, false otherwise.
  */
-bool sibGetButtonHeldLock (sib_t* sib, uint8_t index);
+bool sibGetButtonHeld (sib_t* sib, uint8_t index);
 
 /**
  * @brief Gets the value of an analog input (paddle).
- * @note This automatically locks and unlocks the CAN node. Do not call between locks.
  * @param sib The steering input board to check.
  * @param index The index of the analog value to get.
  * @return The analog value, or 0 if invalid.
  */
-float sibGetAnalogValueLock (sib_t* sib, uint8_t index);
+float sibGetAnalogValue (sib_t* sib, uint8_t index);
+
+/// @brief Version of @c sibGetButtonDown that locks the CAN mutex.
+/// @note This automatically locks and unlocks the CAN node. Do not call between locks.
+bool sibGetButtonDownLock (sib_t* sib, uint8_t index)
+{
+	canNodeLock ((canNode_t*) sib);
+	bool value = sibGetButtonDown (sib, index);
+	canNodeUnlock ((canNode_t*) sib);
+	return value;
+}
+
+/// @brief Version of @c sibGetButtonHeld that locks the CAN mutex.
+/// @note This automatically locks and unlocks the CAN node. Do not call between locks.
+bool sibGetButtonHeldLock (sib_t* sib, uint8_t index)
+{
+	canNodeLock ((canNode_t*) sib);
+	bool value = sibGetButtonHeld (sib, index);
+	canNodeUnlock ((canNode_t*) sib);
+	return value;
+}
+
+/// @brief Version of @c sibGetAnalogValue that locks the CAN mutex.
+/// @note This automatically locks and unlocks the CAN node. Do not call between locks.
+static inline float sibGetAnalogValueLock (sib_t* sib, uint8_t index)
+{
+	canNodeLock ((canNode_t*) sib);
+	float value = sibGetAnalogValue (sib, index);
+	canNodeUnlock ((canNode_t*) sib);
+	return value;
+}
 
 #endif // STEERING_INPUT_BOARD_H
