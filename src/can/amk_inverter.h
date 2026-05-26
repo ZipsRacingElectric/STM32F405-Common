@@ -18,16 +18,15 @@
 /// @brief The maximum amount of requestable driving torque, in Nm.
 #define AMK_DRIVING_TORQUE_MAX 21.0f
 
-/// @brief The maximum amount of requestable regenerative torque, in Nm. Note that this value is a magnitude, actual regen
-/// requests are negative.
-#define AMK_REGENERATIVE_TORQUE_MAX 21.0f
+/// @brief The maximum amount of requestable regenerative torque, in Nm. Note that regen requests are negative.
+#define AMK_REGENERATIVE_TORQUE_MAX -21.0f
 
 /**
  * @brief Checks whether or not a torque value is a valid requestable value.
  * @param torque The torque to be requested, in Nm.
  * @return True if the value is value, false otherwise.
  */
-#define amkTorqueRequestValid(torque) ((torque) <= AMK_DRIVING_TORQUE_MAX && (torque) >= -AMK_REGENERATIVE_TORQUE_MAX)
+#define amkTorqueRequestValid(torque) ((torque) <= AMK_DRIVING_TORQUE_MAX && (torque) >= AMK_REGENERATIVE_TORQUE_MAX)
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
@@ -166,9 +165,9 @@ inline bool amkClampTorqueRequest (float* torque)
 		*torque = AMK_DRIVING_TORQUE_MAX;
 		return true;
 	}
-	if (*torque < -AMK_REGENERATIVE_TORQUE_MAX)
+	if (*torque < AMK_REGENERATIVE_TORQUE_MAX)
 	{
-		*torque = -AMK_REGENERATIVE_TORQUE_MAX;
+		*torque = AMK_REGENERATIVE_TORQUE_MAX;
 		return true;
 	}
 	return false;
