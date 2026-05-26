@@ -43,10 +43,27 @@ typedef struct
 
 	/// @brief Indicates the positive isolation relay is closed. This indicates precharge is complete.
 	bool positiveIrClosed;
+
+	/// @brief The voltage of the pack.
+	float packVoltage;
+
+	/// @brief The current being delivered by the pack.
+	float packCurrent;
+
+	/// @brief The power being delivered by the pack.
+	float powerDelivery;
 } bms_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void bmsInit (bms_t* bms, const bmsConfig_t* config);
+
+/**
+ * @brief Gets the power delivery of the BMS.
+ * @note Locks and unlocks the CAN node's mutex.
+ * @param bms The BMS to use.
+ * @return The power delivery, in Watts.
+ */
+float bmsGetPowerLock (bms_t* bms);
 
 #endif // BMS_H
