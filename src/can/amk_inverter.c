@@ -219,6 +219,8 @@ msg_t amkSendTorqueRequest (amkInverter_t* amk, float torqueRequest, float torqu
 
 msg_t amkSendErrorResetRequest (amkInverter_t* amk, sysinterval_t timeout)
 {
+	// TODO(Barach): This needs rework.
+
 	canNodeLock ((canNode_t*) amk);
 
 	// If no error is present, exit early.
