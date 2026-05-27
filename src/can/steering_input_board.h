@@ -76,7 +76,7 @@ float sibGetAnalogValue (sib_t* sib, uint8_t index);
 
 /// @brief Version of @c sibGetButtonDown that locks the CAN mutex.
 /// @note This automatically locks and unlocks the CAN node. Do not call between locks.
-bool sibGetButtonDownLock (sib_t* sib, uint8_t index)
+static inline bool sibGetButtonDownLock (sib_t* sib, uint8_t index)
 {
 	canNodeLock ((canNode_t*) sib);
 	bool value = sibGetButtonDown (sib, index);
@@ -86,7 +86,7 @@ bool sibGetButtonDownLock (sib_t* sib, uint8_t index)
 
 /// @brief Version of @c sibGetButtonHeld that locks the CAN mutex.
 /// @note This automatically locks and unlocks the CAN node. Do not call between locks.
-bool sibGetButtonHeldLock (sib_t* sib, uint8_t index)
+static inline bool sibGetButtonHeldLock (sib_t* sib, uint8_t index)
 {
 	canNodeLock ((canNode_t*) sib);
 	bool value = sibGetButtonHeld (sib, index);
