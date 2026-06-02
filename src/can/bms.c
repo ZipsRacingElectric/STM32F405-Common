@@ -66,8 +66,9 @@ void bmsHandleStatusMessage (bms_t* bms, CANRxFrame* frame)
 void bmsHandlePowerMessage (bms_t* bms, CANRxFrame* frame)
 {
 	bms->packVoltage			= WORD_TO_VOLTAGE (frame->data16 [0]);
-	bms->packCurrent			= WORD_TO_CURRENT (frame->data16 [1]);
-	bms->powerDelivery			= WORD_TO_POWER (frame->data16 [2]);
+	// TODO(Barach): Validate this fixes regen.
+	bms->packCurrent			= WORD_TO_CURRENT ((int16_t) frame->data16 [1]);
+	bms->powerDelivery			= WORD_TO_POWER ((int16_t) frame->data16 [2]);
 }
 
 int8_t bmsReceiveHandler (void *node, CANRxFrame *frame)
