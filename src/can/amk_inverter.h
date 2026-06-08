@@ -100,7 +100,7 @@ typedef struct
 	/// de-rating).
 	float actualTorque;
 
-	/// @brief The actual speed of the motor shaft.
+	/// @brief The actual speed of the motor shaft, in RPM.
 	float actualSpeed;
 
 	/// @brief The measured voltage of the DC bus.
@@ -109,7 +109,7 @@ typedef struct
 	/// @brief The measured torque current (Id) of the motor.
 	float torqueCurrent;
 
-	/// @brief The actual power consumption of the device.
+	/// @brief The actual mechanical power consumption of the device.
 	float actualPower;
 
 	/// @brief The temperature of the inverter.

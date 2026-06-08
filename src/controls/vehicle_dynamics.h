@@ -42,10 +42,20 @@
 
 // Angles
 
+#define ROTATIONS_PER_RADIAN				(1 / 2.0f / M_PI)
+#define RADIANS_PER_ROTATION				(2.0f * M_PI)
+#define ROTATIONS_TO_RADIANS(rotations)		((rotations) * RADIANS_PER_ROTATION)
+#define RADIANS_TO_ROTATIONS(radians)		((radians) * ROTATIONS_PER_RADIAN)
+
 #define RADIANS_PER_DEGREE					(M_PI / 180.0f)
 #define DEGREES_PER_RADIAN					(180.0f / M_PI)
 #define DEGREES_TO_RADIANS(degrees)			((degrees) * RADIANS_PER_DEGREE)
 #define RADIANS_TO_DEGREES(radians)			((radians) * DEGREES_PER_RADIAN)
+
+// Angular Velocity
+
+#define RPM_TO_RADIANS_PER_SECOND(rpm)		((rpm) * RADIANS_PER_ROTATION * MINUTES_PER_SECOND)
+#define RADIANS_PER_SECOND_TO_RPM(radians)	((radians) * ROTATIONS_PER_RADIAN * SECONDS_PER_MINUTE)
 
 // Geometry -------------------------------------------------------------------------------------------------------------------
 
