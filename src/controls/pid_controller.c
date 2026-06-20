@@ -93,3 +93,16 @@ float pidApplyAntiWindup (pidController_t* pid, float xMinimum, float xMaximum)
 
 	return pid->x;
 }
+
+float pidSeedIntegral (pidController_t* pid, float x)
+{
+	if (pid->ki != 0)
+		pid->yiPrime = (x - pid->xp - pid->xd) / pid->ki;
+	else
+		pid->yiPrime = 0;
+
+	// Re-calculate the output after modifying the integral term.
+	pid->xi = pid->ki * pid->yiPrime;
+	pid->x = pid->xp + pid->xi + pid->xd;
+	return pid->x;
+}

@@ -79,4 +79,13 @@ float pidFilterDerivative (pidController_t* pid, float a, float* xdPrime);
  */
 float pidApplyAntiWindup (pidController_t* pid, float xMinimum, float xMaximum);
 
+/**
+ * @brief "Seeds" the initial condition of a PID controller's integral term to achieve a specific output. This is used for
+ * either setting initial conditions, or for eliminating "dead zone" in a saturated controller's output.
+ * @param pid The PID to seed.
+ * @param x The value of the output to seed for.
+ * @return The output value after seeding the controller. Note, if Ki = 0, this will not equal @c x .
+ */
+float pidSeedIntegral (pidController_t* pid, float x);
+
 #endif // PID_CONTROLLER_H
