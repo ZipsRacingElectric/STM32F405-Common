@@ -61,6 +61,7 @@ void bmsHandleStatusMessage (bms_t* bms, CANRxFrame* frame)
 	bms->balancing				= (frame->data8 [1] & 0b00000100) == 0b00000100;
 	bms->negativeIrClosed		= (frame->data8 [2] & 0b00000001) == 0b00000001;
 	bms->positiveIrClosed		= (frame->data8 [2] & 0b00000010) == 0b00000010;
+	bms->limpMode				= (frame->data8 [5] & 0b00000100) == 0b00000100;
 }
 
 void bmsHandlePowerMessage (bms_t* bms, CANRxFrame* frame)

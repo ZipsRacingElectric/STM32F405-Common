@@ -52,6 +52,9 @@ typedef struct
 
 	/// @brief The power being delivered by the pack.
 	float powerDelivery;
+
+	/// @brief Indicates the BMS put the car in limp mode.
+	bool limpMode;
 } bms_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
