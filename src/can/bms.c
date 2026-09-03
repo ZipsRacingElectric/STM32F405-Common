@@ -61,11 +61,11 @@ void bmsHandleStatusMessage (bms_t* bms, CANRxFrame* frame)
 	bms->balancing				= (frame->data8 [1] & 0b00000100) == 0b00000100;
 	bms->negativeIrClosed		= (frame->data8 [2] & 0b00000001) == 0b00000001;
 	bms->positiveIrClosed		= (frame->data8 [2] & 0b00000010) == 0b00000010;
-	bms->limpMode				= (frame->data8 [5] & 0b00000100) == 0b00000100;
+	bms->limpMode				= (frame->data8 [5] >> 2) & 0b00000011;
 }
 
 void bmsHandlePowerMessage (bms_t* bms, CANRxFrame* frame)
-{
+{	
 	bms->packVoltage			= WORD_TO_VOLTAGE (frame->data16 [0]);
 	// TODO(Barach): Validate this fixes regen.
 	bms->packCurrent			= WORD_TO_CURRENT ((int16_t) frame->data16 [1]);
