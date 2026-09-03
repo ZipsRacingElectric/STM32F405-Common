@@ -21,6 +21,22 @@ typedef struct
 	sysinterval_t	timeoutPeriod;
 } bmsConfig_t;
 
+typedef enum {
+
+    /// @brief No state present that would cause the battery to put the car in limp mode.
+    LIMP_MODE_OFF = 0b00,
+
+    /// @brief Number of cells have dropped within voltage limp mode margin.
+    LIMP_MODE_VOLTAGE = 0b01,
+
+    /// @brief Number of temp sensors have risen within limp mode margin. 
+    LIMP_MODE_TEMP = 0b10,
+
+    /// @brief Both voltage condition and temp condition have been entered for limp mode.
+    LIMP_MODE_BOTH = 0b11
+    
+} limpModeState_t;
+
 typedef struct
 {
 	CAN_NODE_FIELDS;
