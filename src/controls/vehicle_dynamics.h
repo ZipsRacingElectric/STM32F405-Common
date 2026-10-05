@@ -40,6 +40,20 @@
 #define MINUTES_TO_HOURS(minutes)			((minutes) * HOURS_PER_MINUTE)
 #define HOURS_TO_MINUTES(hours)				((hours) * MINUTES_PER_HOUR)
 
+// Speed
+
+#define MPS_PER_KPH 						(1.0f / 3.6f)
+#define KPH_PER_MPS							(3.6f)
+
+#define KPH_TO_MPS(kph)						((kph) * MPS_PER_KPH)
+#define MPS_TO_KPH(mps)						((mps) * KPH_PER_MPS)
+
+// Acceleration 
+
+#define MPS2_PER_G							9.80665f
+#define G_TO_MPS2(g)						((g) * MPS2_PER_G)	
+#define MPS2_TO_G(acceleration)				((acceleration) / MPS2_PER_G)			
+
 // Angles
 
 #define ROTATIONS_PER_RADIAN				(1 / 2.0f / M_PI)
@@ -59,8 +73,8 @@
 
 // Geometry -------------------------------------------------------------------------------------------------------------------
 
-#define RADIUS_TO_DIAMETER(radius)			((radius) * 2.0f * M_PI)
-#define DIAMETER_TO_RADIUS(diameter)		((diameter) / (2.0f * M_PI))
+#define RADIUS_TO_CIRCUMFERENCE(radius)			((radius) * 2.0f * M_PI)
+#define CIRCUMFERENCE_TO_RADIUS(diameter)		((diameter) / (2.0f * M_PI))
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -99,7 +113,7 @@ static inline float motorSpeedToGroundSpeed (float motorSpeed, float gearRatio, 
 {
 	return motorSpeed											// Motor speed (RPM)
 		/ gearRatio												// Convert to wheel speed (RPM)
-		* RADIUS_TO_DIAMETER (INCHES_TO_METERS (tireRadius))	// Convert to ground speed (m/min)
+		* RADIUS_TO_CIRCUMFERENCE (INCHES_TO_METERS (tireRadius))	// Convert to ground speed (m/min)
 		* MINUTES_PER_HOUR										// Convert to ground speed (m/h)
 		* KILOMETERS_PER_METER;									// Convert to ground speed (km/h)
 }
@@ -109,14 +123,14 @@ static inline float motorSpeedToGroundSpeed (float motorSpeed, float gearRatio, 
  * @param groundSpeed The ground speed of the vehicle, in km/h.
  * @param gearRatio The gear ratio of the gearbox.
  * @param tireRadius The radius of the tire, in inches.
- * @return The ground speed of the vehicle, in km/h.
+ * @return The motor speed, in RPM
  */
 static inline float groundSpeedToMotorSpeed (float groundSpeed, float gearRatio, float tireRadius)
 {
 	return groundSpeed											// Ground speed (km/h)
 		* METERS_PER_KILOMETER									// Convert to ground speed (m/h)
 		* HOURS_PER_MINUTE										// Convert to ground speed (m/min)
-		/ RADIUS_TO_DIAMETER (INCHES_TO_METERS (tireRadius))	// Convert to wheel speed (RPM)
+		/ RADIUS_TO_CIRCUMFERENCE (INCHES_TO_METERS (tireRadius))	// Convert to wheel speed (RPM)
 		* gearRatio;											// Convert to motor speed (RPM)
 }
 
