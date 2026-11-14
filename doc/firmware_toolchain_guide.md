@@ -88,3 +88,29 @@ Some dependencies of this project are not natively built for Windows. A solution
     ├── controls                        - Code related to control systems. Torque vectoring implementations are defined here.
     └── peripherals                     - Code related to board hardware and peripherals.
 ```
+
+## Creating a NEW Github Repository
+
+- Create a new empty repository from github.com/zipsracingelectric/repositories
+- Make the repository public
+- Leave the rest of the options as default
+- No README
+- No .gitignore
+- No Lisence
+
+### Creating the project on a local directory
+- Inside the ZRE folder
+- Clone the stub project into the name of the project you want, this creates a local folder that will compile.
+```
+git clone -- recurse-submodules --branch main git@github.com:ZipsRacingElectric/STM32F405-Stub.git YOUR_PROJECT_NAME
+```
+- Enter the project folder
+```
+cd <YOUR PROJECT NAME>
+```
+- Point local project to empty github repository
+```
+git remote set-url origin  git@github.com:ZipsRacingElectric/YOUR_PROJECT_NAME.git
+```
+- Use CTLR + SHIFT + F to search for ```"stub"``` in the project and replace it with your project name.
+
