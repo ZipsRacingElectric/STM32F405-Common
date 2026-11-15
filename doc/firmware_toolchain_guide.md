@@ -109,8 +109,27 @@ git clone -- recurse-submodules --branch main git@github.com:ZipsRacingElectric/
 cd <YOUR PROJECT NAME>
 ```
 - Point local project to empty github repository
-```
+``` 
 git remote set-url origin  git@github.com:ZipsRacingElectric/YOUR_PROJECT_NAME.git
 ```
 - Use CTLR + SHIFT + F to search for ```"stub"``` in the project and replace it with your project name.
+
+## Updating Common Submodule
+- Below are instructions for updating the common submodule
+- Note that the common submodule is not updated via `git pull` and uses a different set of instructions
+```
+// Download the common submodule
+git submodule update --init --recursive
+cd common
+
+// Update the main branch
+git switch main
+git pull --ff-only origin main
+
+// Commit to repository that common submodule has been updated
+cd ..
+git add common
+git commit -m "Update common."
+git push
+```
 
