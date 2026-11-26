@@ -3,11 +3,13 @@
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
-#define STATUS_MESSAGE_ID		0x101
-#define POWER_MESSAGE_ID		0x102
+#define STATUS_MESSAGE_ID				0x101
+#define POWER_MESSAGE_ID				0x102
+#define TEMPERATURE_MESSAGE_ID  		0x104
 
-#define STATUS_MESSAGE_FLAG_POS 0x00
-#define POWER_MESSAGE_FLAG_POS	0x01
+#define STATUS_MESSAGE_FLAG_POS 		0x00
+#define POWER_MESSAGE_FLAG_POS			0x01
+#define TEMPERATURE_MESSAGE_FLAG_POS	0x02
 
 // Conversions ----------------------------------------------------------------------------------------------------------------
 
@@ -22,6 +24,11 @@
 // Power (W)
 #define POWER_FACTOR			4.0f
 #define WORD_TO_POWER(word)		((word) * POWER_FACTOR)
+
+// Temperature (C)
+#define TEMPERATURE_FACTOR 		0.0625f
+#define TEMPERATURE_OFFSET 		(-106.0f)
+#define WORD_TO_TEMP(word)		((word) * TEMPERATURE_FACTOR + TEMPERATURE_OFFSET)
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
@@ -38,7 +45,7 @@ void bmsInit (bms_t* bms, const bmsConfig_t* config)
 		.receiveHandler	= bmsReceiveHandler,
 		.timeoutHandler	= NULL,
 		.timeoutPeriod	= config->timeoutPeriod,
-		.messageCount	= 2
+		.messageCount	= 3
 	};
 	canNodeInit ((canNode_t*) bms, &nodeConfig);
 }
@@ -72,6 +79,20 @@ void bmsHandlePowerMessage (bms_t* bms, CANRxFrame* frame)
 	bms->powerDelivery			= WORD_TO_POWER ((int16_t) frame->data16 [2]);
 }
 
+void bmsHandleTemperatureMessage (bms_t* bms, CANRxFrame* frame)
+{
+	uint32_t payload =
+		(uint32_t)frame->data8[0] |
+		((uint32_t)frame->data8[1] << 8 ) |
+		((uint32_t)frame->data8[2] << 16);
+		
+	uint16_t tempMaxRaw = (payload >> 0) & 0xFFF; 
+	uint16_t tempAvgRaw = (payload >> 12) & 0xFFF;
+
+	bms->temperatureMax 		= WORD_TO_TEMP(tempMaxRaw);
+	bms->temperatureAvg 		= WORD_TO_TEMP(tempAvgRaw);
+}
+
 int8_t bmsReceiveHandler (void *node, CANRxFrame *frame)
 {
 	bms_t* bms = (bms_t*) node;
@@ -89,6 +110,12 @@ int8_t bmsReceiveHandler (void *node, CANRxFrame *frame)
 		// Power message.
 		bmsHandlePowerMessage (bms, frame);
 		return POWER_MESSAGE_FLAG_POS;
+	}
+	else if (id == TEMPERATURE_MESSAGE_ID)
+	{
+		// Temperature message.
+		bmsHandleTemperatureMessage(bms, frame);
+		return TEMPERATURE_MESSAGE_FLAG_POS;
 	}
 	else
 	{

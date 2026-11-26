@@ -69,6 +69,12 @@ typedef struct
 	/// @brief The power being delivered by the pack.
 	float powerDelivery;
 
+	/// @brief The max temperature of the sense lines.
+	float temperatureMax;
+	
+	/// @brief The average temperature of the sense lines.
+	float temperatureAvg;
+
 	/// @brief Indicates the BMS put the car in limp mode.
 	limpModeState_t limpModeState;
 } bms_t;
