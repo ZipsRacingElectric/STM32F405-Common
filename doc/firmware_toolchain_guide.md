@@ -102,7 +102,7 @@ Some dependencies of this project are not natively built for Windows. A solution
 - Inside the ZRE folder
 - Clone the stub project into the name of the project you want, this creates a local folder that will compile.
 ```
-git clone -- recurse-submodules --branch main git@github.com:ZipsRacingElectric/STM32F405-Stub.git YOUR_PROJECT_NAME
+git clone --recurse-submodules --branch main git@github.com:ZipsRacingElectric/STM32F405-Stub.git YOUR_PROJECT_NAME
 ```
 - Enter the project folder
 ```
